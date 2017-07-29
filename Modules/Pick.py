@@ -8,7 +8,7 @@ from Database.database import *
 
 
 class Pick:
-    """Pick a random hero or set of heroes."""
+    """Pick a random hero or set of heroes from Agora."""
 
     def __init__(self, bot):
         self.bot = bot
