@@ -1,11 +1,11 @@
-import discord
-from discord.ext import commands
 from Modules.Agora import *
+from Modules.Pick import *
 
 BOT_DESCRIPTION = '''Bot commands using the Python Agora API.'''
 
 bot = commands.Bot(command_prefix='.', description=BOT_DESCRIPTION)
 bot.add_cog(Agora(bot))
+bot.add_cog(Pick(bot))
 
 
 @bot.event
