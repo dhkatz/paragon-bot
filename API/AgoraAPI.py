@@ -23,6 +23,24 @@ def get_agora_player_id(username):
     return player_id
 
 
+def get_raw_elo(player_id):
+    """Get a player's elo and ranking as a Discord embed from a Agora.gg"""
+    url = 'https://api.agora.gg/v1/players/' + player_id + '?lc=en&ssl=true'
+    player_elo = 'null'
+    try:
+        with requests.get(url=url) as r:
+            if r.status_code == 200:
+                js = r.json()
+                if not js['privacyEnabled'] or str(js['privacyEnabled']) == '':
+                    if 'stats' in js:
+                        for stat in js['stats']:
+                            if stat['mode'] == 4:
+                                player_elo = str(math.floor(stat['elo']))
+    except Exception as e:
+        logging.exception(e)
+    return player_elo
+
+
 def get_agora_player_elo(player_id):
     """Get a player's elo and ranking as a Discord embed from a Agora.gg"""
     url = 'https://api.agora.gg/v1/players/' + player_id + '?lc=en&ssl=true'
@@ -61,7 +79,6 @@ def get_agora_player_elo(player_id):
                     embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
-
     return embed
 
 

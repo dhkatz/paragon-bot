@@ -6,7 +6,7 @@ from peewee import *
 
 HERO_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/test.db')
 CARD_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/cards.db')
-PLAYER_DB = SqliteDatabase('test2.db')
+PARAGON_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/paragon_bot.db')
 
 HERO_FILE = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database')
 HEROES = configparser.ConfigParser()
@@ -35,12 +35,13 @@ class Hero(BaseModel):
 
 class Player(BaseModel):
     agora_player_id = CharField(unique=True)
+    discord_id = CharField(unique=True)
     player_name = CharField()
     elo = FloatField()
-    team_id = IntegerField()  # Unique ID of team player is on
+    team_id = IntegerField(null=True)  # Unique ID of team player is on
 
     class Meta:
-        database = PLAYER_DB
+        database = PARAGON_DB
 
 
 class Team(BaseModel):
@@ -108,6 +109,13 @@ def set_heroes():
         logging.exception(e)
 
     return HERO_DB
+
+
+def set_players():
+    PARAGON_DB.connect()
+    if 'player' not in PARAGON_DB.get_tables():
+        Player.create_table()
+    PARAGON_DB.close()
 
 
 def set_cards():
