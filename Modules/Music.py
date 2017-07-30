@@ -1,6 +1,8 @@
 import asyncio
 import discord
 from discord.ext import commands
+from Util import checks
+from Database.database import *
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
@@ -41,8 +43,9 @@ class VoiceState:
     def player(self):
         return self.current.player
 
-    def skip(self):
+    async def skip(self):
         self.skip_votes.clear()
+        await self.bot.send_message(self.current.channel, 'Skipped ' + str(self.current))
         if self.is_playing():
             self.player.stop()
 
@@ -90,6 +93,7 @@ class Music:
                 pass
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def join(self, ctx, *, channel: discord.Channel):
         """Joins a voice channel."""
         try:
@@ -102,6 +106,7 @@ class Music:
             await self.bot.say('Ready to play audio in ' + channel.name)
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def summon(self, ctx):
         """Summons the bot to join your voice channel."""
         summoned_channel = ctx.message.author.voice_channel
@@ -118,6 +123,7 @@ class Music:
         return True
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def play(self, ctx, *, song: str = ''):
         """Plays a song.
         If there is a song currently in the queue, then it is
@@ -154,6 +160,7 @@ class Music:
             await state.songs.put(entry)
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def volume(self, ctx, value: int = -1):
         """Sets the volume of the currently playing song."""
 
@@ -166,17 +173,21 @@ class Music:
             else:
                 await self.bot.say('Current volume is {:.0%}'.format(player.volume))
         else:
-            await self.bot.say('No music is currently playing!')
+            await self.bot.say('**No music is currently playing!**')
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def pause(self, ctx):
         """Pauses the currently played song."""
         state = self.get_voice_state(ctx.message.server)
         if state.is_playing():
             player = state.player
             player.pause()
+        else:
+            await self.bot.say('**No music is currently playing!**')
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def resume(self, ctx):
         """Resumes the currently played song."""
         state = self.get_voice_state(ctx.message.server)
@@ -185,6 +196,7 @@ class Music:
             player.resume()
 
     @commands.command(pass_context=True, no_pm=True)
+    @checks.is_music()
     async def stop(self, ctx):
         """Stops playing audio and leaves the voice channel.
         This also clears the queue.
@@ -195,6 +207,8 @@ class Music:
         if state.is_playing():
             player = state.player
             player.stop()
+        else:
+            await self.bot.say('**No music is currently playing!**')
 
         try:
             state.audio_player.cancel()
@@ -211,18 +225,19 @@ class Music:
 
         state = self.get_voice_state(ctx.message.server)
         if not state.is_playing():
-            await self.bot.say('Not playing any music right now...')
+            await self.bot.say('**Not playing any music right now!**')
             return
 
         voter = ctx.message.author
+        # TODO Allow server moderators and admins to skip songs
         if voter == state.current.requester:
-            await self.bot.say('Requester requested skipping song...')
-            state.skip()
+            await self.bot.say('Requester requested skipping song!')
+            await state.skip()
         elif voter.id not in state.skip_votes:
             state.skip_votes.add(voter.id)
             total_votes = len(state.skip_votes)
             if total_votes >= 3:
-                await self.bot.say('Skip vote passed, skipping song...')
+                await self.bot.say('Skip vote passed, skipping song!')
                 state.skip()
             else:
                 await self.bot.say('Skip vote added, currently at [{}/3]'.format(total_votes))

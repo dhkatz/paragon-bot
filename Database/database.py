@@ -1,6 +1,7 @@
 import configparser
 import logging
 
+import discord
 import requests
 from peewee import *
 
@@ -16,6 +17,16 @@ HEROES.read(HERO_FILE)
 class BaseModel(Model):
     class Meta:
         database = HERO_DB
+
+
+class Server(BaseModel):
+    server_id = CharField(unique=True)
+    server_name = CharField()
+    use_music_role = BooleanField(default=True)
+    music_role_id = CharField(null=True)
+
+    class Meta:
+        database = PARAGON_DB
 
 
 class Hero(BaseModel):
@@ -46,8 +57,11 @@ class Player(BaseModel):
 
 class Team(BaseModel):
     team_id = IntegerField(unique=True)  # Unique Team ID, assignable to players
-    team_name = CharField()
-    team_elo = FloatField()
+    team_name = CharField(null=True)  # Team's chosen name
+    team_elo = FloatField(default=0)  # Average team elo
+    role_id = CharField(null=True)  # Role for the team
+    channel_id = CharField(null=True)  # Text channel for the team
+    voice_channel_id = CharField(null=True)  # Voice channel for the team
 
 
 class TeamPlayer(BaseModel):
@@ -116,6 +130,53 @@ def set_players():
     if 'player' not in PARAGON_DB.get_tables():
         Player.create_table()
     PARAGON_DB.close()
+
+
+def set_servers(client):
+    PARAGON_DB.connect()
+    if 'server' not in PARAGON_DB.get_tables():
+        Server.create_table()
+
+
+async def add_server(client: discord.Client, server: discord.Server):
+    print('NOTICE: Adding server ' + server.name + ' to database...')
+    can_manage = False
+    for role in server.me.roles:
+        if role.permissions.manage_roles:
+            can_manage = True
+            break
+    if not can_manage:
+        error_message = 'Paragon Subreddit Bot does not have the proper permissions! Leaving server. . .'
+        await client.send_message(server.owner, content=error_message)
+        await client.leave_server(server)
+        return
+
+    for role in server.me.roles:
+        if role.name == 'Music':
+            music_role = role
+            guild = Server(server_id=server.id, server_name=server.name, use_music_role=True,
+                           music_role_id=music_role.id)
+            guild.save()
+            print('NOTICE: Added server ' + server.name + ' to database!')
+            return
+
+    music_permissions = server.default_role
+    music_permissions = music_permissions.permissions
+
+    music_role = await client.create_role(server, name='Music', position=-1, permissions=music_permissions, hoist=False,
+                                          colour=discord.Color(11815924), mentionable=False)
+    guild = Server(server_id=server.id, server_name=server.name, use_music_role=True, music_role_id=music_role.id)
+    guild.save()
+    print('NOTICE: Added server ' + server.name + ' to database!')
+
+
+async def remove_server(server: discord.Server):
+    print('NOTICE: Removing ' + server.name + ' from database...')
+    try:
+        server_left = Server.get(Server.server_id == server.id)
+        server_left.delete_instance()
+    except DoesNotExist:
+        'ERROR: Somehow a server we left did not exist in the database!'
 
 
 def set_cards():

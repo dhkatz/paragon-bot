@@ -1,8 +1,9 @@
-import peewee
-from discord.ext import commands
 from urllib.parse import quote
 
-from Modules.Utility import *
+import peewee
+from discord.ext import commands
+
+from Util.utility import *
 
 
 class Agora:
