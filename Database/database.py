@@ -9,14 +9,14 @@ HERO_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Databa
 CARD_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/cards.db')
 PARAGON_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/paragon_bot.db')
 
-HERO_FILE = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database')
+HERO_FILE = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon-Discord-Bot/Database')
 HEROES = configparser.ConfigParser()
 HEROES.read(HERO_FILE)
 
 
 class BaseModel(Model):
     class Meta:
-        database = HERO_DB
+        database = PARAGON_DB
 
 
 class Server(BaseModel):
@@ -24,9 +24,6 @@ class Server(BaseModel):
     server_name = CharField()
     use_music_role = BooleanField(default=True)
     music_role_id = CharField(null=True)
-
-    class Meta:
-        database = PARAGON_DB
 
 
 class Hero(BaseModel):
@@ -50,9 +47,6 @@ class Player(BaseModel):
     player_name = CharField()
     elo = FloatField()
     team_id = IntegerField(null=True)  # Unique ID of team player is on
-
-    class Meta:
-        database = PARAGON_DB
 
 
 class Team(BaseModel):
@@ -90,9 +84,6 @@ class Card(BaseModel):
     upgrade_slots = CharField()
     effects = CharField()
     maxed_effects = CharField(null=True)
-
-    class Meta:
-        database = CARD_DB
 
 
 def set_heroes():

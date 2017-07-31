@@ -5,7 +5,7 @@ import aiohttp
 class Fun:
     """Miscellaneous fun commands."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command(pass_context=True)

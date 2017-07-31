@@ -9,7 +9,7 @@ from Util.utility import *
 class Agora:
     """Agora.gg related commands."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command(pass_context=True)
