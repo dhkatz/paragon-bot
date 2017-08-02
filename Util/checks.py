@@ -1,10 +1,11 @@
 import discord
 from discord.ext import commands
 from Database.database import *
+import config.load as config
 
 
 def check_permissions(ctx, perms, *, check=all):
-    is_owner = ctx.bot.is_owner(ctx.author)
+    is_owner = ctx.message.author.id == config.__ownerid__
     if is_owner:
         return True
 
@@ -20,7 +21,7 @@ def has_permissions(*, check=all, **perms):
 
 
 def check_guild_permissions(ctx: commands.Context, perms, *, check=all):
-    is_owner = ctx.message.author.id == ctx.message.server.owner.id
+    is_owner = ctx.message.author.id == config.__ownerid__
     if is_owner:
         return True
 
@@ -50,6 +51,13 @@ def is_mod():
 def is_admin():
     def predicate(ctx):
         return check_guild_permissions(ctx, {'administrator': True})
+
+    return commands.check(predicate)
+
+
+def is_owner():
+    def predicate(ctx):
+        return ctx.message.author.id == config.__ownerid__
 
     return commands.check(predicate)
 

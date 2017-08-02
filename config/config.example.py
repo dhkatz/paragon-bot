@@ -5,10 +5,10 @@ __ownerid__ = 'YOUR DISCORD ID'
 
 # BOT COG CONFIGURATION
 __cogs__ = [
-    'Cogs.admin',
-    'Cogs.fun',
-    'Cogs.agora',
-    'Cogs.info',
-    'Cogs.music',
-    'Cogs.pick'
+    'cogs.admin',
+    'cogs.fun',
+    'cogs.agora',
+    'cogs.info',
+    'cogs.music',
+    'cogs.pick'
 ]

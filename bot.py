@@ -1,12 +1,30 @@
 import discord
 import asyncio
+import logging
+from logging.handlers import RotatingFileHandler
+import time
+import sys
 from discord.ext import commands
+from collections import Counter
 import config.load as config
 import Database.database as db
 
 import datetime
 
-__version__ = '0.10.5'
+__version__ = '0.12.1'
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+log_format = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setFormatter(log_format)
+ch.setLevel(logging.WARNING)
+logger.addHandler(ch)
+
+fh = RotatingFileHandler(filename='discordbot.log', maxBytes=1024 * 5, backupCount=2, encoding='utf-8', mode='w')
+fh.setFormatter(log_format)
+logger.addHandler(fh)
 
 BOT_DESCRIPTION = '''A Discord bot built for Paragon servers.'''
 BOT_STATUS = discord.Game(name='Paragon (Say ' + config.__prefix__ + 'help)')
@@ -31,6 +49,8 @@ async def on_ready():
         except Exception:
             print(f'ERROR: Unable to load cog {cog}!')
     bot.version = __version__
+    bot.start_time = time.time()
+    bot.commands_used = Counter()
     bot.owner = discord.utils.find(lambda u: u.id == config.__ownerid__, bot.get_all_members())
     await bot.change_presence(game=BOT_STATUS)
     await setup_data_tables(bot)
@@ -41,7 +61,7 @@ async def on_command_error(error, ctx):
     if isinstance(error, commands.NoPrivateMessage):
         await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
     elif isinstance(error, commands.DisabledCommand):
-        await bot.say(':x: Dieser Command wurde deaktiviert')
+        await bot.say(':x: This command has been disabled.')
     elif isinstance(error, commands.CommandInvokeError):
         if bot.dev:
             raise error
@@ -59,9 +79,15 @@ async def on_command_error(error, ctx):
                 pass
 
 
-# @bot.event
-# async def on_command(command, ctx):
-#     print('COMMAND: ' + command.name + ' in ' + ctx.message.server.name + ' called by ' + ctx.message.author.name)
+@bot.event
+async def on_command(command, ctx):
+    bot.commands_used[command.name] += 1
+    msg = ctx.message
+    if msg.channel.is_private:
+        destination = 'Private Message'
+    else:
+        destination = f'#{msg.channel.name} ({msg.server.name})'
+    logger.info(f'{msg.author.name} in {destination}: {msg.content}')
 
 
 @bot.event
