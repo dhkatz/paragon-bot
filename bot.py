@@ -1,58 +1,88 @@
-from Modules.Agora import *
-from Modules.Pick import *
-from Modules.Info import *
-from Modules.Music import *
-from Modules.Fun import *
-from discord.ext.commands import errors
+import discord
+import asyncio
+from discord.ext import commands
+import config.load as config
+import Database.database as db
+
+import datetime
+
+__version__ = '0.10.5'
 
 BOT_DESCRIPTION = '''A Discord bot built for Paragon servers.'''
-BOT_COMMAND_PREFIX = '.'
-BOT_STATUS = discord.Game(name='Say ' + BOT_COMMAND_PREFIX + 'help')
-BOT_TOKEN = 'MzA4MDMyNTUyMjQzODIyNjAy.DFnY5Q.T7ztlpMlNdWKpgNs3uj96eXb7ng'
+BOT_STATUS = discord.Game(name='Paragon (Say ' + config.__prefix__ + 'help)')
 
-bot = commands.Bot(command_prefix=BOT_COMMAND_PREFIX, description=BOT_DESCRIPTION)
-bot.add_cog(Agora(bot))
-bot.add_cog(Pick(bot))
-bot.add_cog(Info(bot))
-bot.add_cog(Music(bot))
-bot.add_cog(Fun(bot))
+bot = commands.Bot(command_prefix=config.__prefix__, description=BOT_DESCRIPTION)
 
 
 @bot.event
 async def on_ready():
     print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
+    print(f'Bot Name: {bot.user.name}')
+    print(f'Bot ID: {bot.user.id}')
+    if bot.user.id == '308032552243822602':
+        bot.dev = True
+    else:
+        bot.dev = False
+    print(f'Dev Mode: {bot.dev}')
+    print('------')
+    for cog in config.__cogs__:
+        try:
+            bot.load_extension(cog)
+        except Exception:
+            print(f'ERROR: Unable to load cog {cog}!')
+    bot.version = __version__
+    bot.owner = discord.utils.find(lambda u: u.id == config.__ownerid__, bot.get_all_members())
     await bot.change_presence(game=BOT_STATUS)
     await setup_data_tables(bot)
 
 
 @bot.event
 async def on_command_error(error, ctx):
-    if isinstance(error, errors.CheckFailure):
-        await bot.send_message(ctx.message.channel,
-                               content='You do not have permission to use ' + bot.command_prefix + ctx.invoked_with)
+    if isinstance(error, commands.NoPrivateMessage):
+        await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
+    elif isinstance(error, commands.DisabledCommand):
+        await bot.say(':x: Dieser Command wurde deaktiviert')
+    elif isinstance(error, commands.CommandInvokeError):
+        if bot.dev:
+            raise error
+        else:
+            embed = discord.Embed(title=':x: Command Error', colour=0x992d22)  # Dark Red
+            embed.add_field(name='Error', value=error)
+            embed.add_field(name='Server', value=ctx.message.server)
+            embed.add_field(name='Channel', value=ctx.message.channel)
+            embed.add_field(name='User', value=ctx.message.author)
+            embed.add_field(name='Message', value=ctx.message.clean_content)
+            embed.timestamp = datetime.datetime.utcnow()
+            try:
+                await bot.send_message(bot.owner, embed=embed)
+            except:
+                pass
+
+
+# @bot.event
+# async def on_command(command, ctx):
+#     print('COMMAND: ' + command.name + ' in ' + ctx.message.server.name + ' called by ' + ctx.message.author.name)
 
 
 @bot.event
 async def on_server_join(server):
     await asyncio.sleep(3)  # We wait for Discord to create the bot's role!
-    await add_server(bot, server)
+    await db.add_server(bot, server)
 
 
 @bot.event
 async def on_server_remove(server):
     print('NOTICE: Bot left server ' + server.name)
-    await remove_server(server)
+    await db.remove_server(server)
 
 
 async def setup_data_tables(client):
     print('NOTICE: Setting up data tables...')
-    set_players()
-    set_heroes()
-    set_cards()
-    set_servers(client)
+    db.set_players()
+    db.set_heroes()
+    db.set_cards()
+    db.set_servers(client)
     print('NOTICE: Successfully setup data tables!')
 
 
-bot.run(BOT_TOKEN)
+bot.run(config.__token__)

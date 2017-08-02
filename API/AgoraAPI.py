@@ -198,6 +198,7 @@ def get_agora_hero_guide(hero_id, image, num):
 def get_agora_player_latest_game_stats(player_id, num):
     """Get the stats of a player's most recent game."""
     now = datetime.now()
+    now = now.replace(day=1)
     start_year = str(now.replace(month=now.month - 3).year)
     start_month = str(now.replace(month=now.month - 3).month)
     end_year = str(now.replace(month=now.month + 1).year)
@@ -206,7 +207,7 @@ def get_agora_player_latest_game_stats(player_id, num):
 
     url = 'https://api.agora.gg/v1/players/' + player_id + '/history/match/?page=0&start=' + start_year + '-'
     url += start_month + '-01T00:00:00Z&end=' + end_year + '-' + end_month + '-' + end_day + 'T00:00:00Z&lc=en&ssl=true'
-
+    print(url)
     embed = discord.Embed()
 
     try:
@@ -230,10 +231,8 @@ def get_agora_player_latest_game_stats(player_id, num):
                                 kda_percent = kda_percent / max(1, d)
 
                                 embed.title = 'Game Played: ' + js[num][
-                                    'createdAt'].split('T')[0] + ' Time: ' + final_time + ':' + seconds
-                                HERO_DB.connect()
+                                    'createdAt'].split('T')[0] + ' (UTC)' + ' Time: ' + final_time + ':' + seconds
                                 hero = Hero.select().where(Hero.agora_data_name % player['hero']).get()
-                                HERO_DB.close()
                                 embed.description = 'Played as ' + hero.hero_name + '. Level ' + str(
                                     player['level']) + '. Player has played ' + str(
                                     player['heroGamesPlayed']) + ' games with this hero.'

@@ -3,8 +3,8 @@ from discord.ext import commands
 from Database.database import *
 
 
-async def check_permissions(ctx, perms, *, check=all):
-    is_owner = await ctx.bot.is_owner(ctx.author)
+def check_permissions(ctx, perms, *, check=all):
+    is_owner = ctx.bot.is_owner(ctx.author)
     if is_owner:
         return True
 
@@ -13,43 +13,43 @@ async def check_permissions(ctx, perms, *, check=all):
 
 
 def has_permissions(*, check=all, **perms):
-    async def predicate(ctx):
-        return await check_permissions(ctx, perms, check=check)
+    def predicate(ctx):
+        return check_permissions(ctx, perms, check=check)
 
     return commands.check(predicate)
 
 
-async def check_guild_permissions(ctx, perms, *, check=all):
-    is_owner = await ctx.bot.is_owner(ctx.author)
+def check_guild_permissions(ctx: commands.Context, perms, *, check=all):
+    is_owner = ctx.message.author.id == ctx.message.server.owner.id
     if is_owner:
         return True
 
-    if ctx.guild is None:
+    if ctx.message.server is None:
         return False
 
-    resolved = ctx.author.guild_permissions
+    resolved = ctx.message.author.guild_permissions
     return check(getattr(resolved, name, None) == value for name, value in perms.items())
 
 
 def has_guild_permissions(*, check=all, **perms):
-    async def pred(ctx):
-        return await check_guild_permissions(ctx, perms, check=check)
+    def predicate(ctx):
+        return check_guild_permissions(ctx, perms, check=check)
 
-    return commands.check(pred)
+    return commands.check(predicate)
 
 
 # These do not take channel overrides into account
 
 def is_mod():
-    async def predicate(ctx):
-        return await check_guild_permissions(ctx, {'manage_guild': True})
+    def predicate(ctx):
+        return check_guild_permissions(ctx, {'manage_guild': True})
 
     return commands.check(predicate)
 
 
 def is_admin():
-    async def predicate(ctx):
-        return await check_guild_permissions(ctx, {'administrator': True})
+    def predicate(ctx):
+        return check_guild_permissions(ctx, {'administrator': True})
 
     return commands.check(predicate)
 
@@ -57,8 +57,8 @@ def is_admin():
 def mod_or_permissions(**perms):
     perms['manage_guild'] = True
 
-    async def predicate(ctx):
-        return await check_guild_permissions(ctx, perms, check=any)
+    def predicate(ctx):
+        return check_guild_permissions(ctx, perms, check=any)
 
     return commands.check(predicate)
 
@@ -66,8 +66,8 @@ def mod_or_permissions(**perms):
 def admin_or_permissions(**perms):
     perms['administrator'] = True
 
-    async def predicate(ctx):
-        return await check_guild_permissions(ctx, perms, check=any)
+    def predicate(ctx):
+        return check_guild_permissions(ctx, perms, check=any)
 
     return commands.check(predicate)
 
@@ -83,6 +83,10 @@ def is_in_guilds(*guild_ids):
 
 
 def music_role(ctx):
+    is_owner = ctx.message.author.id == ctx.message.server.owner.id
+    if is_owner:
+        return True
+
     server = Server.get(Server.server_id == ctx.message.server.id)
     if server.use_music_role == 0:
         return True

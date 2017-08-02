@@ -87,8 +87,7 @@ class Card(BaseModel):
 
 
 def set_heroes():
-    HERO_DB.connect()
-    if 'hero' not in HERO_DB.get_tables():
+    if 'hero' not in PARAGON_DB.get_tables():
         Hero.create_table()
 
     url = 'https://api.agora.gg/v1/gamedata/heroes?lc=en&ssl=true'
@@ -109,22 +108,16 @@ def set_heroes():
                                                            abilities=hero['abilities'], icon=icon,
                                                            agora_data_name=hero['code'], roles=lane)
                     new_hero.save()
-        HERO_DB.close()
     except Exception as e:
         logging.exception(e)
 
-    return HERO_DB
-
 
 def set_players():
-    PARAGON_DB.connect()
     if 'player' not in PARAGON_DB.get_tables():
         Player.create_table()
-    PARAGON_DB.close()
 
 
 def set_servers(client):
-    PARAGON_DB.connect()
     if 'server' not in PARAGON_DB.get_tables():
         Server.create_table()
 
@@ -171,8 +164,7 @@ async def remove_server(server: discord.Server):
 
 
 def set_cards():
-    CARD_DB.connect()
-    if 'card' not in CARD_DB.get_tables():
+    if 'card' not in PARAGON_DB.get_tables():
         Card.create_table()
 
     url = 'https://api.agora.gg/v1/gamedata/cards?lc=en&ssl=true'
@@ -214,11 +206,8 @@ def set_cards():
                                                        cost=card['cost'], upgrade_slots=card['upgradeSlots'],
                                                        effects=card_effects, maxed_effects=max_effects)
                 new_card.save()
-            CARD_DB.close()
     except Exception as e:
         logging.exception(e)
-
-    return CARD_DB
 
 
 def set_aram():
