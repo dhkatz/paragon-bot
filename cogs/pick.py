@@ -106,7 +106,7 @@ class Pick:
 
     @commands.command(pass_context=True)
     async def picksupport(self, ctx):
-        """Pick a random ADC."""
+        """Pick a random Support."""
 
         embed = discord.Embed()
         hero = Hero.select().where(Hero.roles.contains('SUPP')).order_by(fn.Random()).get()
