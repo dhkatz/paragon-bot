@@ -8,6 +8,28 @@ Paragon-Discord-Bot
 A Discord Bot built for use specifically in Paragon related Discord servers. Made with hate and [discord.py](https://github.com/Rapptz/discord.py).
 This bot is not designed to be setup by anyone else, but it's design intention is easy to understand.
 
+Tournament Creation
+-------------------
+Detailed steps on how to create a tournament.
+
+To create a tournament, use the **.tournament create** command supplied by the bot.
+You **must** include the following parameters in the **mentioned order**. Please read the **notes** column for important information!
+
+Upon creating a tournament, the bot will reply with tournament details, including a tournament ID which players can use to signup with, which you then **must confirm**.
+
+#### Parameter List ####
+
+Parameter | Description | Possible Values | Notes
+----------|-------------|-----------------|------
+**type** : `str` | The type of tournament being created. | `ARAM`, `Standard`
+**name** : `str` | Name of your tournament. | `"Best Tournament"` | Names with spaces should be surrounded with quotes!
+**date** : `str` | Date and time of your tournament in UTC. (MM-DD-YYYY hh:mm) | `"12-31-2017 16:30"` | Ensure the date is surrounded by quotes! Dates MUST be in UTC!
+
+Example Command Usage: `.tournament create ARAM "Paragon Subreddit ARAM 3" "8-19-2017 16:30"`
+
+Signups will automatically be closed 48 hours before the tournament start time, to ensure proper preparation time.
+Any users who signup after this time will be stored as substitutes, and will automatically fill spots vacated by players.
+
 Commands List (WIP)
 -------------------
 **Info:** Currently each command is prefixed with a period (.)

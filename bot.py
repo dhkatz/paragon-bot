@@ -1,17 +1,18 @@
-import discord
 import asyncio
-import logging
-from logging.handlers import RotatingFileHandler
-import time
-import sys
-from discord.ext import commands
-from collections import Counter
-import config.load as config
-import Database.database as db
-
 import datetime
+import logging
+import sys
+import time
+from collections import Counter
+from logging.handlers import RotatingFileHandler
 
-__version__ = '0.12.1'
+import discord
+from discord.ext import commands
+
+import Database.database as db
+import config.load as config
+
+__version__ = '0.12.2'
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -19,7 +20,7 @@ log_format = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'
 
 ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(log_format)
-ch.setLevel(logging.WARNING)
+ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
 fh = RotatingFileHandler(filename='discordbot.log', maxBytes=1024 * 5, backupCount=2, encoding='utf-8', mode='w')
@@ -47,7 +48,7 @@ async def on_ready():
         try:
             bot.load_extension(cog)
         except Exception:
-            print(f'ERROR: Unable to load cog {cog}!')
+            logger.error(f'Unable to load cog {cog}')
     bot.version = __version__
     bot.start_time = time.time()
     bot.commands_used = Counter()
@@ -98,17 +99,25 @@ async def on_server_join(server):
 
 @bot.event
 async def on_server_remove(server):
-    print('NOTICE: Bot left server ' + server.name)
+    logger.info(f'Bot left server: {server.name}')
     await db.remove_server(server)
 
 
 async def setup_data_tables(client):
-    print('NOTICE: Setting up data tables...')
+    logger.info(f'Setting up data tables...')
     db.set_players()
     db.set_heroes()
     db.set_cards()
+    db.set_tournaments()
     db.set_servers(client)
-    print('NOTICE: Successfully setup data tables!')
+    logger.info(f'Successfully setup data tables!')
 
 
+async def check_tournament():
+    await asyncio.sleep(60)
+    logger.info(f'Checking unconfirmed tournaments...')
+    db.update_tournaments()
+
+
+bot.loop.create_task(check_tournament())
 bot.run(config.__token__)

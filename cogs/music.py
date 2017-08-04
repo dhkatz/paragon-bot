@@ -1,8 +1,9 @@
 import asyncio
-import discord
+
 from discord.ext import commands
-from Util import checks
+
 from Database.database import *
+from Util import checks
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')

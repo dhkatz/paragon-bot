@@ -1,5 +1,6 @@
 import configparser
 import logging
+import datetime
 
 import discord
 import requests
@@ -63,14 +64,21 @@ class TeamPlayer(BaseModel):
     team = ForeignKeyField(Team)
 
 
-class Aram(BaseModel):
+class Event(BaseModel):
     server_id = CharField(unique=True)
     server_name = CharField()
+    creator = CharField()
+    tournament_name = CharField()
+    tournament_id = CharField()
+    type = CharField()
+    confirmed = BooleanField(default=False)
+    created = DateTimeField()
+    event_date = DateTimeField()
 
 
-class AramTeam(BaseModel):
+class TournamentTeam(BaseModel):
     ForeignKeyField(Team)
-    ForeignKeyField(Aram)
+    ForeignKeyField(Event)
 
 
 class Card(BaseModel):
@@ -115,6 +123,18 @@ def set_heroes():
 def set_players():
     if 'player' not in PARAGON_DB.get_tables():
         Player.create_table()
+
+
+def set_tournaments():
+    if 'event' not in PARAGON_DB.get_tables():
+        Event.create_table()
+
+
+def update_tournaments():
+    for event in Event.select().where(not Event.confirmed):
+        if event.created < datetime.datetime.utcnow() - datetime.timedelta(minutes=5):
+            logging.info(f'Deleted unconfirmed tournament with ID {event.tournament_id}!')
+            event.delete_instance()
 
 
 def set_servers(client):

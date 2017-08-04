@@ -10,5 +10,6 @@ __cogs__ = [
     'cogs.agora',
     'cogs.info',
     'cogs.music',
-    'cogs.pick'
+    'cogs.pick',
+    'cogs.tournament'
 ]
