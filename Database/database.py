@@ -1,14 +1,12 @@
 import configparser
-import logging
 import datetime
+import logging
 
 import discord
 import requests
 from peewee import *
 
-HERO_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/test.db')
-CARD_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/cards.db')
-PARAGON_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon ARAM Bot/Database/paragon_bot.db')
+PARAGON_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon-Discord-Bot/Database/paragon_bot.db')
 
 HERO_FILE = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon-Discord-Bot/Database')
 HEROES = configparser.ConfigParser()
@@ -74,6 +72,7 @@ class Event(BaseModel):
     tournament_id = CharField()
     type = CharField()
     teams = TextField(null=True)
+    size = IntegerField(default=0)
     confirmed = BooleanField(default=False)
     created = DateTimeField()
     event_date = DateTimeField()

@@ -1,5 +1,6 @@
 from datetime import datetime
 from time import time
+
 from discord.ext import commands
 
 from API import AgoraAPI
@@ -39,13 +40,15 @@ class Tournament:
             if tournament_time > datetime.datetime.now() + datetime.timedelta(days=30):
                 await self.bot.reply('You cannot create a tournament scheduled for more than a month from now!')
         except:
-            embed.title = 'ERROR'
+            embed.title = 'Error'
             embed.description = 'Invalid time format! Please try again!'
+            embed.colour = discord.Colour.dark_red()
             await self.bot.send_message(ctx.message.channel, embed=embed)
             return
         if type.upper() not in self.types:
-            embed.title = 'ERROR'
+            embed.title = 'Error'
             embed.description = 'Invalid tournament type!'
+            embed.colour = discord.Colour.dark_red()
             embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             await self.bot.send_message(ctx.message.channel, embed=embed)
             return
@@ -65,6 +68,7 @@ class Tournament:
 
     @tournament.command(name='confirm', pass_context=True)
     async def _confirm(self, ctx, unique_id: str):
+        """Confirm the creation of a new tournament."""
         embed = discord.Embed()
         if len(unique_id) != 8:
             await self.bot.reply('The tournament ID is 8 characters!')
@@ -86,6 +90,7 @@ class Tournament:
         else:
             embed.title = 'Error'
             embed.description = 'No tournament was found with the provided ID! Please try again.'
+            embed.colour = discord.Colour.dark_red()
             await self.bot.send_message(ctx.message.channel, embed=embed)
 
     @tournament.command(name='help', pass_context=True)
@@ -95,6 +100,7 @@ class Tournament:
 
     @tournament.command(name='delete', pass_context=True)
     async def _delete(self, ctx, unique_id: str):
+        """Delete an existing tournament."""
         if len(unique_id) != 8:
             await self.bot.reply('The tournament ID is 8 characters!')
             return
@@ -114,6 +120,7 @@ class Tournament:
 
     @tournament.command(name='join', pass_context=True)
     async def _join(self, ctx, unique_id: str):
+        """Join an ongoing tournament."""
         if len(unique_id) != 8:
             await self.bot.reply('The tournament ID is 8 characters!')
             return
@@ -137,6 +144,7 @@ class Tournament:
 
     @tournament.command(name='leave', pass_context=True)
     async def _leave(self, ctx, unique_id: str):
+        """Leave a tournament."""
         if len(unique_id) != 8:
             await self.bot.reply('The tournament ID is 8 characters!')
             return
@@ -155,6 +163,33 @@ class Tournament:
                 await self.bot.reply('You are not in any tournaments!')
         except DoesNotExist:
             await self.bot.reply('You must link your Epic ID to your Discord account before leaving!')
+
+    @tournament.command(name='info', pass_context=True)
+    async def _info(self, ctx, unique_id: str):
+        """View information about a tournament."""
+        embed = discord.Embed()
+        try:
+            tournament = Event.get(Event.tournament_id == unique_id)
+        except DoesNotExist:
+            embed.title = 'Error'
+            embed.description = 'No tournament exists with the provided ID!'
+            embed.colour = discord.Colour.dark_red()
+            await self.bot.send_message(ctx.message.channel, embed=embed)
+            return
+        creator = discord.utils.find(lambda u: u.id == tournament.creator, self.bot.get_all_members())
+        if tournament.teams is not None and len(
+                tournament.teams) > 0:
+            size = len(tournament.teams.split('|'))
+        else:
+            size = 'None'
+        embed.title = tournament.tournament_name
+        embed.description = 'Created by ' + creator.name + ' in ' + tournament.server_name
+        embed.add_field(name='Created', value=tournament.created)
+        embed.add_field(name='Time', value=tournament.event_date)
+        embed.add_field(name='Type', value=tournament.type)
+        embed.add_field(name='Teams', value=size)
+        embed.add_field(name='Players', value=tournament.size)
+        await self.bot.send_message(ctx.message.channel, embed=embed)
 
 
 def setup(bot):

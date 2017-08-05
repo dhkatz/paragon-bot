@@ -41,10 +41,12 @@ class Agora:
             if len(message) > 1:
                 embed.title = 'Error'
                 embed.description = 'The user you entered does not seem exist, please re-check the name!'
+                embed.colour = discord.Colour.dark_red()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             else:
                 embed.title = 'Error'
                 embed.description = 'Your discord account does not seem to be the same as your Paragon username, please find you IGN and use the command .elo <PlayerName>. Tired of typing your name everytime? use .ign <PlayerName> to tag your Pragon name to your Discord name. Once tagged just use .elo!'
+                embed.colour = discord.Colour.dark_red()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
         else:
             embed = AgoraAPI.get_agora_player_elo(user_id)
@@ -79,10 +81,12 @@ class Agora:
             if len(message) > 1:
                 embed.title = 'Error'
                 embed.description = 'The user you entered does not seem exist, please re-check the name!'
+                embed.colour = discord.Colour.dark_red()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             else:
                 embed.title = 'Error'
                 embed.description = 'Your discord account does not seem to be the same as your Paragon username, please find you IGN and use the command .elo <PlayerName>. Tired of typing your name everytime? use .ign <PlayerName> to tag your Pragon name to your Discord name. Once tagged just use .elo!'
+                embed.colour = discord.Colour.dark_red()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
         else:
             embed = AgoraAPI.get_agora_player_stats(user_id)
@@ -122,6 +126,7 @@ class Agora:
             else:
                 embed.title = 'Error'
                 embed.description = 'Your discord account does not seem to be the same as your Paragon username, please find you IGN and use the command .elo <PlayerName>. Tired of typing your name every time? use .ign <PlayerName> to tag your Paragon name to your Discord name. Once tagged just use .elo!'
+                embed.colour = discord.Colour.dark_red()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
         else:
             embed = AgoraAPI.get_agora_player_latest_game_stats(user_id, 0)
@@ -140,6 +145,7 @@ class Agora:
         else:
             embed.title = 'Error'
             embed.description = 'You must specify a hero with this command!'
+            embed.colour = discord.Colour.dark_red()
             embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             await self.bot.send_message(ctx.message.channel, embed=embed)
             return
@@ -148,6 +154,7 @@ class Agora:
             results = Hero.select().where(Hero.hero_name.contains(hero)).get()
         except peewee.DoesNotExist:
             embed.title = 'Error'
+            embed.colour = discord.Colour.dark_red()
             embed.description = 'Hero does not exist, if the hero is new be patient and try again in a few days!'
             embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             await self.bot.send_message(ctx.message.channel, embed=embed)
@@ -173,11 +180,10 @@ class Agora:
             return embed
 
         try:
-            HERO_DB.connect()
             results = Hero.select().where(Hero.hero_name.contains(hero)).get()
-            HERO_DB.close()
         except peewee.DoesNotExist:
             embed.title = 'Error'
+            embed.colour = discord.Colour.dark_red()
             embed.description = 'Hero does not exist, if the hero is new be patient and try again in a few days!'
             embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             await self.bot.send_message(ctx.message.channel, embed=embed)
@@ -206,6 +212,7 @@ class Agora:
                     embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 elif results.count() == 0:
                     embed.title = 'Error'
+                    embed.colour = discord.Colour.dark_red()
                     embed.description = 'The card you are searching for does not exist!'
                     embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 else:
@@ -224,6 +231,7 @@ class Agora:
                 player_elo = AgoraAPI.get_raw_elo(player_id)
             else:
                 embed.title = 'Error'
+                embed.colour = discord.Colour.dark_red()
                 embed.description = 'The Epic ID you entered does not exist! Remember names with spaces need quotes!'
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 await self.bot.send_message(ctx.message.channel, embed=embed)
@@ -254,6 +262,7 @@ class Agora:
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             except peewee.DoesNotExist:
                 embed.title = 'Error'
+                embed.colour = discord.Colour.dark_red()
                 embed.description = 'No player name specified and no Epic ID was found linked to your account!\n'
                 embed.description += '(See \'' + self.bot.command_prefix + 'help ign\' for more command information!)'
         await self.bot.send_message(ctx.message.channel, embed=embed)
