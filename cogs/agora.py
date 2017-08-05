@@ -230,14 +230,14 @@ class Agora:
                 return
 
             try:
-                player = Player.get(Player.discord_id == user[1]).get()
+                player = Player.get(Player.discord_id == ctx.message.author.id).get()
                 player.player_name = epic_id
                 player.save()
                 embed.title = 'Success'
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 embed.description = 'You have updated your Epic ID!'
             except peewee.DoesNotExist:
-                player = Player(agora_player_id=player_id, discord_id=user[1], player_name=epic_id,
+                player = Player(agora_player_id=player_id, discord_id=ctx.message.author.id, player_name=epic_id,
                                 elo=player_elo, team_id=None)
                 player.save()
                 embed.title = 'Success'
@@ -246,7 +246,7 @@ class Agora:
         else:
             # User is requesting their current ID!
             try:
-                player = Player.get(Player.discord_id == user[1])
+                player = Player.get(Player.discord_id == ctx.message.author.id)
                 embed.title = 'Current Epic ID'
                 embed.description = player.player_name
                 embed.url = 'https://agora.gg/profile/' + player.agora_player_id + '/' + quote(player.player_name,

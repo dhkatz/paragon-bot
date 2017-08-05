@@ -26,7 +26,7 @@ def get_agora_player_id(username):
 def get_raw_elo(player_id):
     """Get a player's elo and ranking as a Discord embed from a Agora.gg"""
     url = 'https://api.agora.gg/v1/players/' + player_id + '?lc=en&ssl=true'
-    player_elo = 'null'
+    player_elo = 0
     try:
         with requests.get(url=url) as r:
             if r.status_code == 200:

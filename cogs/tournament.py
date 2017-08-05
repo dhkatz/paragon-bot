@@ -24,11 +24,20 @@ class Tournament:
             await self.bot.reply('Please see ' + self.bot.command_prefix + 'help tournament for command usage.')
 
     @tournament.command(name='create', pass_context=True)
+    @commands.cooldown(1, 600, commands.BucketType.user)
     async def _create(self, ctx, type: str, name: str, date: str):
         """Create a new tournament on this server."""
         embed = discord.Embed()
         try:
+            Event.get(Event.creator == ctx.message.author.id)
+            self.bot.reply('Currently you cannot create more than one event per account!')
+            return
+        except DoesNotExist:
+            pass
+        try:
             tournament_time = datetime.datetime.strptime(date, '%m-%d-%Y %H:%M')
+            if tournament_time > datetime.datetime.now() + datetime.timedelta(days=30):
+                await self.bot.reply('You cannot create a tournament scheduled for more than a month from now!')
         except:
             embed.title = 'ERROR'
             embed.description = 'Invalid time format! Please try again!'
@@ -82,11 +91,10 @@ class Tournament:
     @tournament.command(name='help', pass_context=True)
     async def _help(self, ctx):
         """Information on how to create a tournament."""
-        await self.bot.reply()
+        await self.bot.reply('Please see https://github.com/DoctorJew/Paragon-Discord-Bot for tournament creation!')
 
     @tournament.command(name='delete', pass_context=True)
     async def _delete(self, ctx, unique_id: str):
-        embed = discord.Embed()
         if len(unique_id) != 8:
             await self.bot.reply('The tournament ID is 8 characters!')
             return
@@ -95,6 +103,10 @@ class Tournament:
             if ctx.message.author.id not in [tournament.creator, self.bot.owner.id]:
                 await self.bot.reply('Only the event creator or server admins can delete events!')
                 return
+            # TODO - Delete teams associated with tournament
+            for player in Player.select().where(
+                    Player.tournaments.contains(unique_id)):  # Remove the tournament from players!
+                player.tournaments = str(player.tournaments).replace(unique_id + '|', '')
             await self.bot.reply('Deleted the tournament called ' + tournament.tournament_name + '.')
             tournament.delete_instance()
         except DoesNotExist:
@@ -102,15 +114,47 @@ class Tournament:
 
     @tournament.command(name='join', pass_context=True)
     async def _join(self, ctx, unique_id: str):
-        embed = discord.Embed()
         if len(unique_id) != 8:
             await self.bot.reply('The tournament ID is 8 characters!')
             return
         try:
-            # TODO
-            Player.get(Player.discord_id == ctx.message.author.id)
+            tournament = Event.get(Event.tournament_id == unique_id)
         except DoesNotExist:
-            await self.bot.reply('You must link your Epic ID ro your Discord account before joining!')
+            await self.bot.reply('No tournament exists with the provided ID!')
+            return
+        try:
+            player = Player.get(Player.discord_id == ctx.message.author.id)
+            if player.tournaments is not None:
+                player.tournaments += unique_id + '|'
+                player.save()
+            else:
+                player.tournaments = ''
+                player.tournaments += unique_id + '|'
+                player.save()
+            self.bot.reply('You joined ' + tournament.tournament_name + '!')
+        except DoesNotExist:
+            await self.bot.reply('You must link your Epic ID to your Discord account before joining!')
+
+    @tournament.command(name='leave', pass_context=True)
+    async def _leave(self, ctx, unique_id: str):
+        if len(unique_id) != 8:
+            await self.bot.reply('The tournament ID is 8 characters!')
+            return
+        try:
+            tournament = Event.get(Event.tournament_id == unique_id)
+        except DoesNotExist:
+            await self.bot.reply('No tournament exists with the provided ID!')
+            return
+        try:
+            player = Player.get(Player.discord_id == ctx.message.author.id)
+            if player.tournaments is not None:
+                player.tournaments = str(player.tournaments).replace(unique_id + '|', '')
+                await self.bot.reply('You left ' + tournament.tournament_name + '!')
+                player.save()
+            else:
+                await self.bot.reply('You are not in any tournaments!')
+        except DoesNotExist:
+            await self.bot.reply('You must link your Epic ID to your Discord account before leaving!')
 
 
 def setup(bot):

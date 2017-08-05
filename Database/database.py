@@ -46,13 +46,15 @@ class Player(BaseModel):
     agora_player_id = CharField(unique=True)
     discord_id = CharField(unique=True)
     player_name = CharField()
-    elo = FloatField()
-    team_id = IntegerField(null=True)  # Unique ID of team player is on
+    elo = FloatField(default=0)
+    tournaments = TextField(null=True)  # Player can be in multiple tournaments
+    teams = TextField(null=True)  # Player could be on multiple teams from different tournaments
 
 
 class Team(BaseModel):
-    team_id = IntegerField(unique=True)  # Unique Team ID, assignable to players
+    team_id = CharField(unique=True)  # Unique Team ID, assignable to players
     team_name = CharField(null=True)  # Team's chosen name
+    tournament = CharField(unique=True)  # Tournament associated with team
     team_elo = FloatField(default=0)  # Average team elo
     role_id = CharField(null=True)  # Role for the team
     channel_id = CharField(null=True)  # Text channel for the team
@@ -71,6 +73,7 @@ class Event(BaseModel):
     tournament_name = CharField()
     tournament_id = CharField()
     type = CharField()
+    teams = TextField(null=True)
     confirmed = BooleanField(default=False)
     created = DateTimeField()
     event_date = DateTimeField()
