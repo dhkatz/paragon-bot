@@ -1,8 +1,10 @@
-import sys
-import os
-import aiohttp
 import asyncio
+import os
+import sys
+
+import aiohttp
 from discord.ext import commands
+
 from Util import checks
 
 

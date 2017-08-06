@@ -12,7 +12,7 @@ from discord.ext import commands
 import Database.database as db
 import config.load as config
 
-__version__ = '0.12.2'
+__version__ = '0.12.6'
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -32,6 +32,8 @@ BOT_STATUS = discord.Game(name='Paragon (Say ' + config.__prefix__ + 'help)')
 
 bot = commands.Bot(command_prefix=config.__prefix__, description=BOT_DESCRIPTION)
 
+
+# TODO - Global error embed function! Would cut down on lines. Pass error message.
 
 @bot.event
 async def on_ready():
@@ -112,12 +114,10 @@ async def setup_data_tables(client):
     db.set_servers(client)
     logger.info(f'Successfully setup data tables!')
 
-
 async def check_tournament():
     await asyncio.sleep(60)
     logger.info(f'Checking unconfirmed tournaments...')
     db.update_tournaments()
-
 
 bot.loop.create_task(check_tournament())
 bot.run(config.__token__)

@@ -121,6 +121,7 @@ class Agora:
         if user_id == 'null':
             if len(message) > 1:
                 embed.title = 'Error'
+                embed.colour = discord.Colour.dark_red()
                 embed.description = 'The user you entered does not seem exist, please re-check the name!'
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             else:
@@ -175,6 +176,7 @@ class Agora:
             hero = message.replace(' ', '', 1)
         else:
             embed.title = 'Error'
+            embed.colour = discord.Colour.dark_red()
             embed.description = 'You must specify a hero with this command!'
             embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
             return embed
@@ -208,6 +210,7 @@ class Agora:
                     for result in results:
                         description += '[' + result.card_name + '](https://agora.gg/card/' + result.card_id + ')\n'
                     embed.title = 'Multiple Cards Found!'
+                    embed.colour = discord.Colour.blue()
                     embed.description = description
                     embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 elif results.count() == 0:
@@ -242,6 +245,7 @@ class Agora:
                 player.player_name = epic_id
                 player.save()
                 embed.title = 'Success'
+                embed.colour = discord.Colour.green()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 embed.description = 'You have updated your Epic ID!'
             except peewee.DoesNotExist:
@@ -249,6 +253,7 @@ class Agora:
                                 elo=player_elo, team_id=None)
                 player.save()
                 embed.title = 'Success'
+                embed.colour = discord.Colour.green()
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
                 embed.description = 'You have attached your Epic ID to your Discord ID!'
         else:
@@ -256,6 +261,7 @@ class Agora:
             try:
                 player = Player.get(Player.discord_id == ctx.message.author.id)
                 embed.title = 'Current Epic ID'
+                embed.colour = discord.Colour.blue()
                 embed.description = player.player_name
                 embed.url = 'https://agora.gg/profile/' + player.agora_player_id + '/' + quote(player.player_name,
                                                                                                safe='')

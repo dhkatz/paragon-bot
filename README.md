@@ -42,6 +42,9 @@ Command and Aliases | Description | Usage
 `.elo` | Returns a player's elo by name from Agora.gg | `.elo DoctorJew`
 `.herodeck`, `.deck`, `.d` | Returns top three hero decks from Agora.gg | `.deck Serath`
 `.heroguide`, `.guide`, `.g` | Returns top three hero guides from Agora.gg | `.guide Serath`
+`.stats` | Returns a player's stats from Agora.gg | `.stats DoctorJew`
+`.lpg` | Get a player's last played game stats from Agora.gg | `.lpg DoctorJew`
+`.ign` | Tag your Paragon IGN to your Discord account. Surround names with spaces in quotes. Empty to see current. | `.ign DoctorJew`
 
 ### Fun ###
 
