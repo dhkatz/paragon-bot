@@ -68,15 +68,17 @@ def get_agora_player_elo(player_id):
                                 embed.title = player_name
                                 embed.url = 'https://agora.gg/profile/' + player_id + '/' + quote(player_name, safe='')
                                 embed.description = info
-                                embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                                embed.set_footer(text='Paragon', icon_url=icon_url)
                     else:
                         embed.title = 'Error'
+                        embed.colour = discord.Colour.dark_red()
                         embed.description = 'There seems to be no data for this account. Please re-check the name.'
-                        embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                        embed.set_footer(text='Paragon', icon_url=icon_url)
                 else:
-                    embed.title = 'Notice'
+                    embed.title = 'Error'
+                    embed.colour = discord.Colour.dark_red()
                     embed.description = 'This account has been set to private!'
-                    embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                    embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
     return embed
@@ -115,15 +117,17 @@ def get_agora_player_stats(player_id):
                                                 value='{0}/{1}/{2} ({3})'.format(str(k), str(d), str(a),
                                                                                  str(round(kda_percent, 2))))
                                 embed.add_field(name='Towers', value=str(stat['towers']), inline=True)
-                                embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                                embed.set_footer(text='Paragon', icon_url=icon_url)
                     else:
                         embed.title = 'Error'
+                        embed.colour = discord.Colour.dark_red()
                         embed.description = 'There seems to be no data for this account. Please re-check the name.'
-                        embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                        embed.set_footer(text='Paragon', icon_url=icon_url)
                 else:
                     embed.title = 'Notice'
+                    embed.colour = discord.Colour.dark_red()
                     embed.description = 'This account is set to private'
-                    embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                    embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
 
@@ -144,7 +148,7 @@ def get_agora_hero_info(hero_id, image):
                 embed.set_thumbnail(url=image)
                 embed.add_field(name='Affinity', value=js['affinity1'] + ' | ' + js['affinity2'])
                 embed.add_field(name='Damage/Type', value=js['attack'] + ' | ' + js['damageType'])
-                embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
 
@@ -166,7 +170,7 @@ def get_agora_hero_deck(hero_id, image, num):
                 embed.description = js['data'][num]['description']
                 embed.add_field(name='Patch', value=js['data'][num]['patch'])
                 embed.add_field(name='Votes', value=js['data'][num]['votesTotal'])
-                embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
 
@@ -188,7 +192,7 @@ def get_agora_hero_guide(hero_id, image, num):
                 embed.add_field(name='Role', value=js[num]['role'])
                 embed.add_field(name='Author', value=js[num]['playerName'] + ' (Elo: ' + str(
                     round(js[num]['elo'], 2)) + ')')
-                embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
 
@@ -197,7 +201,7 @@ def get_agora_hero_guide(hero_id, image, num):
 
 def get_agora_player_latest_game_stats(player_id, num):
     """Get the stats of a player's most recent game."""
-    now = datetime.now()
+    now = datetime.datetime.now()
     now = now.replace(day=1)
     start_year = str(now.replace(month=now.month - 3).year)
     start_month = str(now.replace(month=now.month - 3).month)
@@ -207,7 +211,6 @@ def get_agora_player_latest_game_stats(player_id, num):
 
     url = 'https://api.agora.gg/v1/players/' + player_id + '/history/match/?page=0&start=' + start_year + '-'
     url += start_month + '-01T00:00:00Z&end=' + end_year + '-' + end_month + '-' + end_day + 'T00:00:00Z&lc=en&ssl=true'
-    print(url)
     embed = discord.Embed()
 
     try:
@@ -232,6 +235,8 @@ def get_agora_player_latest_game_stats(player_id, num):
 
                                 embed.title = 'Game Played: ' + js[num][
                                     'createdAt'].split('T')[0] + ' (UTC)' + ' Time: ' + final_time + ':' + seconds
+                                embed.url = 'https://agora.gg/game/' + js[num]['id']
+                                embed.colour = discord.Colour.blue()
                                 hero = Hero.select().where(Hero.agora_data_name % player['hero']).get()
                                 embed.description = 'Played as ' + hero.hero_name + '. Level ' + str(
                                     player['level']) + '. Player has played ' + str(
@@ -245,19 +250,20 @@ def get_agora_player_latest_game_stats(player_id, num):
                                 embed.add_field(name='Minion DMG', value=player['minionDamage'])
                                 embed.add_field(name='Jungle DMG', value=player['jungleDamage'])
                                 embed.add_field(name='Replay ID: ', value=js[num]['id'], inline=False)
-                                embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                                embed.set_footer(text='Paragon', icon_url=icon_url)
                                 break
                 else:
                     embed.title = 'Error'
+                    embed.colour = discord.Colour.dark_red()
                     embed.description = 'There was no last played game data found!'
-                    embed.set_footer(text='2017 Doctor Jew All rights reserved.', icon_url=icon_url)
+                    embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
 
     return embed
 
 
-def get_agora_player_current_game(player_id):
+def get_agora_player_current_game(player_id: str, team: int):
     """Get the stats of a player's current game."""
     url = 'https://api.agora.gg/v1/games/now/' + player_id + '?lc=en&ssl=true'
     info = []
@@ -268,19 +274,13 @@ def get_agora_player_current_game(player_id):
                 js = r.json()
 
                 if str(js).replace('[]', 'null') != 'null':
-                    info.append('**Team 1**\n')
-                    for player in js['teams'][0]:
-                        # TODO: Get human readable hero name from hero database!
-                        info.append(player['name'] + ' (' + player['hero'] + ') | Elo:' + str(player['elo']))
+                    info.append(f'**Team {team + 1}**\n')
+                    for player in js['teams'][team]:
+                        hero = Hero.select().where(Hero.agora_data_name % player['hero']).get()
+                        info.append(player['name'] + ' (' + hero.hero_name + ') | Elo:' + str(player['elo']))
                         info.append(' | Lvl: ' + str(player['level']) + ' | KDA: (' + str(player['kills']))
                         info.append('/' + str(player['deaths']) + '/' + str(player['assists']) + ')\n')
-                    info.append('\n')
-                    info.append('**Team 2**\n')
-                    for player in js['teams'][1]:
-                        # TODO: Get human readable hero name from hero database!
-                        info.append(player['name'] + ' (' + player['hero'] + ') | Elo:' + str(player['elo']))
-                        info.append(' | Lvl: ' + str(player['level']) + ' | KDA: (' + str(player['kills']))
-                        info.append('/' + str(player['deaths']) + '/' + str(player['assists']) + ')\n')
+                        info.append('\n')
                     info.append('Replay ID: ' + js['id'] + '\n')
                 else:
                     info.append('[]23?>\n')

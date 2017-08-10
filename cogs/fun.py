@@ -19,6 +19,12 @@ class Fun:
                 await self.bot.send_message(ctx.message.channel, js['file'])
                 await self.bot.edit_profile()
 
+    @commands.command(pass_context=True)
+    async def shitpost(self, ctx):
+        """Have the bot shitpost a Paragon meme in chat."""
+        await self.bot.reply('Sorry fam, not able to shitpost yet.')
+
+
 
 def setup(bot):
     bot.add_cog(Fun(bot))

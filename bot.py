@@ -112,6 +112,7 @@ async def setup_data_tables(client):
     db.set_cards()
     db.set_tournaments()
     db.set_servers(client)
+    db.set_teams()
     logger.info(f'Successfully setup data tables!')
 
 async def check_tournament():

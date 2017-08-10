@@ -59,28 +59,17 @@ class Team(BaseModel):
     voice_channel_id = CharField(null=True)  # Voice channel for the team
 
 
-class TeamPlayer(BaseModel):
-    player = ForeignKeyField(Player)
-    team = ForeignKeyField(Team)
-
-
 class Event(BaseModel):
     server_id = CharField(unique=True)
     server_name = CharField()
     creator = CharField()
     tournament_name = CharField()
-    tournament_id = CharField()
     type = CharField()
     teams = TextField(null=True)
     size = IntegerField(default=0)
     confirmed = BooleanField(default=False)
     created = DateTimeField()
     event_date = DateTimeField()
-
-
-class TournamentTeam(BaseModel):
-    ForeignKeyField(Team)
-    ForeignKeyField(Event)
 
 
 class Card(BaseModel):
@@ -142,6 +131,11 @@ def update_tournaments():
 def set_servers(client):
     if 'server' not in PARAGON_DB.get_tables():
         Server.create_table()
+
+
+def set_teams():
+    if 'team' not in PARAGON_DB.get_tables():
+        Team.create_table()
 
 
 async def add_server(client: discord.Client, server: discord.Server):

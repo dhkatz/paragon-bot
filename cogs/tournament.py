@@ -40,7 +40,7 @@ class Tournament:
 
     @tournament.command(name='create', pass_context=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def _create(self, ctx, tournament_type: str, name: str, date: str, unique_id: str = ''):
+    async def _create(self, ctx, tournament_type: str, name: str, date: str):
         """Create a new tournament on this server."""
         embed = discord.Embed()
         try:
@@ -49,12 +49,9 @@ class Tournament:
             return
         except DoesNotExist:
             pass
-        if len(unique_id) != 8 and len(unique_id) != 0:
-            await self.embed_notify(ctx, 1, 'Error', 'Your unique ID must be 8 characters!')
-            return
         try:
-            Event.get(Event.tournament_id == unique_id)
-            await self.embed_notify(ctx, 1, 'Error', 'A tournament already exists with the provided ID!')
+            Event.get(Event.server_id == ctx.message.server.id)
+            await self.embed_notify(ctx, 1, 'Error', 'A tournament already exists on this server!')
             return
         except DoesNotExist:
             pass
@@ -69,9 +66,8 @@ class Tournament:
         if tournament_type.upper() not in self.types:
             await self.embed_notify(ctx, 1, 'Error', 'Invalid tournament type!')
             return
-        tournament_id = self.random_id if len(unique_id) == 0 else unique_id
         tournament = Event(server_id=ctx.message.server.id, server_name=ctx.message.server.name, tournament_name=name,
-                           tournament_id=tournament_id, type=tournament_type.upper(), event_date=tournament_time,
+                           type=tournament_type.upper(), event_date=tournament_time,
                            confirmed=False, created=datetime.datetime.utcnow(), creator=ctx.message.author.id)
         tournament.save()
         embed.title = name
@@ -79,7 +75,7 @@ class Tournament:
         embed.colour = discord.Colour.blue()
         embed.add_field(name='Event Type', value=tournament_type.upper())
         embed.add_field(name='Event Time', value=tournament_time.strftime('%m-%d-%Y %H:%M'))
-        embed.add_field(name='Event ID', value=tournament_id)
+        embed.add_field(name='Event ID', value=ctx.message.server.id)
         embed.add_field(name='Confirmation',
                         value='Please confirm the event by typing **' + self.bot.command_prefix + 'tournament confirm [Event ID]**',
                         inline=False)
@@ -89,12 +85,9 @@ class Tournament:
     @tournament.command(name='confirm', pass_context=True)
     async def _confirm(self, ctx, unique_id: str):
         """Confirm the creation of a new tournament."""
-        if len(unique_id) != 8:
-            await self.embed_notify(ctx, 1, 'Error', 'The tournament ID is 8 characters!')
-            return
         found = False
         for tournament in Event.select():
-            if tournament.tournament_id == unique_id and not tournament.confirmed:
+            if tournament.server_id == unique_id and not tournament.confirmed:
                 if ctx.message.author.id not in [tournament.creator, self.bot.owner.id]:
                     await self.embed_notify(ctx, 1, 'Error',
                                             'Only the event creator or server staff may confirm events!')
@@ -105,7 +98,7 @@ class Tournament:
                 break
         if found:
             await self.embed_notify(ctx, 0, 'Tournament Created',
-                                    'Players can now join using **' + self.bot.command_prefix + 'tournament join ' + unique_id + '**')
+                                    'Players can now join using **' + self.bot.command_prefix + 'tournament join**')
         else:
             await self.embed_notify(ctx, 1, 'Error', 'No tournament was found with the provided ID!')
 
@@ -115,45 +108,43 @@ class Tournament:
         await self.bot.reply('Please see https://github.com/DoctorJew/Paragon-Discord-Bot for tournament creation!')
 
     @tournament.command(name='delete', pass_context=True)
-    async def _delete(self, ctx, unique_id: str):
+    async def _delete(self, ctx):
         """Delete an existing tournament."""
-        if len(unique_id) != 8:
-            await self.embed_notify(ctx, 1, 'Error', 'The tournament ID is 8 characters!')
-            return
         try:
-            tournament = Event.get(Event.tournament_id == unique_id)
+            tournament = Event.get(Event.server_id == ctx.message.server.id)
             if ctx.message.author.id not in [tournament.creator, self.bot.owner.id]:
                 await self.embed_notify(ctx, 1, 'Error', 'Only the event creator or server staff may delete events!')
                 return
-            # TODO - Delete teams associated with tournament
+            for team in Team.select().where(Team.tournament == ctx.message.server.id):
+                for player in Player.select().where(Player.teams.contains(team.team_id)):
+                    player.teams = str(player.teams).replace(team.team_id + '|', '')
+                    player.save()
+                team.delete_instance()
             for player in Player.select().where(
-                    Player.tournaments.contains(unique_id)):  # Remove the tournament from players!
-                player.tournaments = str(player.tournaments).replace(unique_id + '|', '')
+                    Player.tournaments.contains(ctx.message.server.id)):  # Remove the tournament from players!
+                player.tournaments = str(player.tournaments).replace(ctx.message.server.id + '|', '')
             await self.embed_notify(ctx, 2, 'Tournament Deleted',
                                     'Deleted the tournament called **' + tournament.tournament_name + '**.')
             tournament.delete_instance()
         except DoesNotExist:
-            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists with the provided ID!')
+            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
 
     @tournament.command(name='join', pass_context=True)
-    async def _join(self, ctx, unique_id: str):
+    async def _join(self, ctx):
         """Join an ongoing tournament."""
-        if len(unique_id) != 8:
-            await self.embed_notify(ctx, 1, 'Error', 'The tournament ID is 8 characters!!')
-            return
         try:
-            tournament = Event.get(Event.tournament_id == unique_id)
+            tournament = Event.get(Event.server_id == ctx.message.server.id)
         except DoesNotExist:
-            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists with the provided ID!')
+            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
             return
         try:
             player = Player.get(Player.discord_id == ctx.message.author.id)
             if player.tournaments is not None:
-                player.tournaments += unique_id + '|'
+                player.tournaments += ctx.message.server.id + '|'
                 player.save()
             else:
                 player.tournaments = ''
-                player.tournaments += unique_id + '|'
+                player.tournaments += ctx.message.server.id + '|'
                 player.save()
             tournament.size = tournament.size + 1
             tournament.save()
@@ -163,38 +154,43 @@ class Tournament:
             await self.embed_notify(ctx, 1, 'Error', 'You must link your Epic ID to your Discord account!')
 
     @tournament.command(name='leave', pass_context=True)
-    async def _leave(self, ctx, unique_id: str):
+    async def _leave(self, ctx):
         """Leave a tournament."""
-        if len(unique_id) != 8:
-            await self.embed_notify(ctx, 1, 'Error', 'The tournament ID is 8 characters!!')
-            return
         try:
-            tournament = Event.get(Event.tournament_id == unique_id)
+            tournament = Event.get(Event.server_id == ctx.message.server.id)
         except DoesNotExist:
-            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists with the provided ID!')
+            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
             return
         try:
             player = Player.get(Player.discord_id == ctx.message.author.id)
             if player.tournaments is not None:
-                player.tournaments = str(player.tournaments).replace(unique_id + '|', '')
+                player.tournaments = str(player.tournaments).replace(ctx.message.server.id + '|', '')
                 await self.embed_notify(ctx, 2, 'Tournament Left',
                                         'You left **' + tournament.tournament_name + '**. See you later!')
-                player.save()
                 tournament.size = tournament.size - 1
                 tournament.save()
             else:
                 await self.embed_notify(ctx, 1, 'Error', 'You are not in any tournaments!')
+                return
         except DoesNotExist:
             await self.embed_notify(ctx, 1, 'Error', 'You must link your Epic ID to your Discord account!')
+            return
+        if player.teams is not None:
+            for team in Team.select().where(Team.tournament == ctx.message.server.id):
+                for team_id in player.teams.split('|'):
+                    if team.team_id == team_id:
+                        player.teams = str(player.teams).replace(team_id + '|', '')
+                        team.delete_instance()
+            player.save()
 
     @tournament.command(name='info', pass_context=True)
     async def _info(self, ctx, unique_id: str):
         """View information about a tournament."""
         embed = discord.Embed()
         try:
-            tournament = Event.get(Event.tournament_id == unique_id)
+            tournament = Event.get(Event.server_id == ctx.message.server.id)
         except DoesNotExist:
-            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists with the provided ID!')
+            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
             return
         creator = discord.utils.find(lambda u: u.id == tournament.creator, self.bot.get_all_members())
         if tournament.teams is not None and len(
@@ -220,9 +216,64 @@ class Tournament:
 
     @team.command(name='create', pass_context=True)
     @checks.is_mod()
-    async def team_create(self, ctx, unique_id: str, name: str):
-        """Manual team creation"""
-        await self.bot.reply('YES')
+    async def team_create(self, ctx, name: str):
+        """Manually add a team to a tournament."""
+        try:
+            tournament = Event.get(Event.server_id == ctx.message.server.id)
+        except DoesNotExist:
+            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
+            return
+        try:
+            Team.get(Team.team_name == name)
+            await self.embed_notify(ctx, 1, 'Error', 'A team already exists with this name!')
+        except DoesNotExist:
+            pass
+        team_id = self.random_id
+        team = Team(team_id=team_id, team_name=name, tournament=tournament.server_id)
+        team.save()
+        if tournament.teams is None:
+            tournament.teams = '' + team_id + '|'
+        else:
+            tournament.teams += team_id + '|'
+        tournament.save()
+        embed = discord.Embed()
+        embed.title = name
+        embed.description = 'Team Details'
+        embed.colour = discord.Colour.blue()
+        embed.add_field(name='Team Name', value=name)
+        embed.add_field(name='Team ID', value=team_id)
+        embed.add_field(name='Event Name', value=tournament.tournament_name, inline=False)
+        embed.add_field(name='Event ID', value=tournament.server_id)
+        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        await self.bot.send_message(ctx.message.channel, embed=embed)
+
+    @team.command(name='delete', pass_context=True)
+    @checks.is_mod()
+    async def team_delete(self, ctx, name: str):
+        """Delete a team by name or unique ID."""
+        try:
+            team = Team.get((Team.team_id == name) & (Team.tournament == ctx.message.server.id))
+            team_id = team.team_id
+            print(team_id)
+            team.delete_instance()
+            await self.embed_notify(ctx, 2, 'Team Deleted', 'Deleted ' + team.team_name)
+            return
+        except DoesNotExist:
+            pass
+        try:
+            team = Team.get((Team.team_name % name) & (Team.tournament == ctx.message.server.id))
+            team_id = team.team_id
+            print(team_id)
+            team.delete_instance()
+            await self.embed_notify(ctx, 2, 'Team Deleted', 'Deleted ' + team.team_name)
+        except DoesNotExist:
+            await self.embed_notify(ctx, 1, 'Error', 'No team exists on this server with that name or ID!')
+            return
+        try:
+            tournament = Event.get(Event.server_id == ctx.message.server.id)
+            tournament.teams = tournament.teams.replace(team_id + '|', '')
+        except DoesNotExist:
+            await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
 
 
 def setup(bot):
