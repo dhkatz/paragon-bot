@@ -38,7 +38,8 @@ Commands List (WIP)
 
 Command and Aliases | Description | Usage
 ----------------|--------------|-------
-`.card` | Returns information on a card or multiple cards. | `.card "Quenching Scales"`, `.card quenching`
+`.card` | Returns information on a card or multiple cards. | `.card "Echo-drive"`, `.card echo`
+`.gem` | Returns information on a gem or multiple gems. | `.gem "Overpowered Spells"`, `.gem overpowered`
 `.elo` | Returns a player's elo by name from Agora.gg | `.elo DoctorJew`
 `.herodeck`, `.deck`, `.d` | Returns top three hero decks from Agora.gg | `.deck Serath`
 `.heroguide`, `.guide`, `.g` | Returns top three hero guides from Agora.gg | `.guide Serath`
