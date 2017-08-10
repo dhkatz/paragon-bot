@@ -70,7 +70,7 @@ async def on_command_error(error, ctx):
             raise error
         else:
             embed = discord.Embed(title=':x: Command Error', colour=0x992d22)  # Dark Red
-            embed.add_field(name='Error', value=error)
+            embed.add_field(name='Error', value=str(error))
             embed.add_field(name='Server', value=ctx.message.server)
             embed.add_field(name='Channel', value=ctx.message.channel)
             embed.add_field(name='User', value=ctx.message.author)
@@ -107,12 +107,7 @@ async def on_server_remove(server):
 
 async def setup_data_tables(client):
     logger.info(f'Setting up data tables...')
-    db.set_players()
-    db.set_heroes()
-    db.set_cards()
-    db.set_tournaments()
-    db.set_servers(client)
-    db.set_teams()
+    db.setup_tables(client)
     logger.info(f'Successfully setup data tables!')
 
 async def check_tournament():

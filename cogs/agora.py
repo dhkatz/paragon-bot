@@ -150,7 +150,7 @@ class Agora:
             return
 
         for i in range(0, 3):
-            embed = AgoraAPI.get_agora_hero_deck(hero_id=results.agora_hero_id, image=results.icon, num=i)
+            embed = AgoraAPI.get_agora_hero_deck(hero_name=results.hero_name, image=results.icon, num=i)
             await self.bot.send_message(ctx.message.channel, embed=embed)
 
     @commands.command(pass_context=True, aliases=['guide', 'g'])
@@ -172,7 +172,7 @@ class Agora:
             return
 
         for i in range(0, 3):
-            embed = AgoraAPI.get_agora_hero_deck(hero_id=results.agora_hero_id, image=results.icon, num=i)
+            embed = AgoraAPI.get_agora_hero_deck(hero_name=results.agora_hero_id, image=results.icon, num=i)
             await self.bot.send_message(ctx.message.channel, embed=embed)
 
     @commands.command(pass_context=True)
@@ -195,6 +195,28 @@ class Agora:
                     return
                 else:
                     embed = build_card(search)
+            await self.bot.send_message(ctx.message.channel, embed=embed)
+
+    @commands.command(pass_context=True)
+    async def gem(self, ctx, *args):
+        """Returns information on a gem or multiple gems. Surround a gem name with quotes."""
+        for search in args:
+            results = Gem.select().where(Gem.gem_name == search).count()
+            if results == 1:
+                embed = build_gem(search)
+            else:
+                results = Gem.select().where(Gem.gem_name.contains(search))
+                if results.count() > 1:
+                    description = ''
+                    for result in results:
+                        description += result.gem_name + '\n'
+                    await self.embed_notify(ctx, 2, 'Multiple Gems Found', description)
+                    return
+                elif results.count() == 0:
+                    await self.embed_notify(ctx, 1, 'Error', 'The gem you are searching for does not exist!')
+                    return
+                else:
+                    embed = build_gem(search)
             await self.bot.send_message(ctx.message.channel, embed=embed)
 
     @commands.command(pass_context=True)

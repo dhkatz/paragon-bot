@@ -155,29 +155,29 @@ def get_agora_hero_info(hero_id, image):
     return embed
 
 
-def get_agora_hero_deck(hero_id, image, num):
+def get_agora_hero_deck(hero_name, image, num):
     """Get the most popular decks on Agora.gg for a hero and return a Discord embed object."""
-    url = 'https://api.agora.gg/v1/decks?page=0&hero=' + hero_id + '&sort=-votes&major=1&lc=en&ssl=true'
+    url = 'https://api.agora.gg/v2/decks?tag=' + quote(hero_name, safe='') + '&sort=-votes&major=1&lc=en&ssl=true'
     embed = discord.Embed()
 
     try:
         with requests.get(url=url) as r:
             if r.status_code == 200:
                 js = r.json()
-                embed.title = js['data'][num]['name']
-                embed.url = 'https://agora.gg/deck/' + str(js['data'][num]['id']) + '/' + js['data'][num]['slug'] + ''
+                embed.title = js[num]['name']
+                embed.url = 'https://agora.gg/deck/' + str(js[num]['id']) + '/' + quote(hero_name, safe='') + ''
                 embed.set_thumbnail(url=image)
-                embed.description = js['data'][num]['description']
-                embed.add_field(name='Patch', value=js['data'][num]['patch'])
-                embed.add_field(name='Votes', value=js['data'][num]['votesTotal'])
+                embed.description = js[num]['description']
+                embed.add_field(name='Patch', value=js[num]['patch'])
+                embed.add_field(name='Votes', value=js[num]['votes'])
                 embed.set_footer(text='Paragon', icon_url=icon_url)
     except Exception as e:
         logging.exception(e)
-
     return embed
 
 
 def get_agora_hero_guide(hero_id, image, num):
+    """Get a guide for a specific hero from Agora.gg"""
     url = 'https://api.agora.gg/v1/guides?name=&hero=' + hero_id + '&role=&page=0&sort=votes&&lc=en&ssl=true'
     embed = discord.Embed()
 

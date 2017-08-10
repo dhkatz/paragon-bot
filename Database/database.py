@@ -75,14 +75,25 @@ class Event(BaseModel):
 class Card(BaseModel):
     card_id = CharField(unique=True)  # Unique Card ID
     card_name = CharField()
-    slot_type = CharField()
-    icon = CharField()
+    template = CharField()
     rarity = CharField()
     affinity = CharField()
-    cost = CharField()
-    upgrade_slots = CharField()
-    effects = CharField()
-    maxed_effects = CharField(null=True)
+    trait = CharField(null=True)
+    gold_cost = IntegerField(default=0)
+    agility_cost = SmallIntegerField(default=0)
+    vitality_cost = SmallIntegerField(default=0)
+    intellect_cost = SmallIntegerField(default=0)
+    levels = CharField()
+
+
+class Gem(BaseModel):
+    gem_id = CharField(unique=True)  # Unique Gem ID
+    gem_name = CharField()
+    template = CharField()
+    description = TextField()
+    slot = SmallIntegerField()
+    stone = CharField()
+    shape = CharField()
 
 
 def set_heroes():
@@ -183,49 +194,58 @@ def set_cards():
     if 'card' not in PARAGON_DB.get_tables():
         Card.create_table()
 
-    url = 'https://api.agora.gg/v1/gamedata/cards?lc=en&ssl=true'
+    url = 'https://api.agora.gg/v2/cards'
 
     try:
         with requests.get(url=url) as r:
             js = r.json()
             for card in js:
-                card_effects = ''
-                max_effects = ''
-                for effect in card['effects']:
-                    if 'stat' in effect:
-                        card_effects += 'stat:' + effect['stat'] + ',value:' + str(effect['value']) + '|'
-                    elif 'description' in effect:
-                        card_effects += 'description:' + effect['description']
-                        if 'cooldown' in effect:
-                            card_effects += ',cooldown:' + str(effect['cooldown'])
-                        if 'unique' in effect:
-                            card_effects += ',unique:' + str(effect['unique'])
-                        if 'passive' in effect:
-                            card_effects += ',passive:' + str(effect['passive'])
-                        card_effects += '|'
-                if card['maxedEffects'] is not None:
-                    for effect in card['maxedEffects']:
-                        if 'stat' in effect:
-                            max_effects += 'stat:' + effect['stat'] + ',value:' + str(effect['value']) + '|'
-                        elif 'description' in effect:
-                            max_effects += 'description:' + effect['description']
-                            if 'cooldown' in effect:
-                                max_effects += ',cooldown:' + str(effect['cooldown'])
-                            if 'unique' in effect:
-                                max_effects += ',unique:' + str(effect['unique'])
-                            if 'passive' in effect:
-                                max_effects += ',passive:' + str(effect['passive'])
-                            max_effects += '|'
+                levels = ''
+                trait = card['trait'] if 'trait' in card else None
+                gold_cost = card['goldCost'] if 'goldCost' in card else 0
+                intellect_cost = card['intellectGemCost'] if 'intellectGemCost' in card else 0
+                agility_cost = card['agilityGemCost'] if 'agilityGemCost' in card else 0
+                vitality_cost = card['vitalityGemCost'] if 'vitalityGemCost' in card else 0
+
+                for level in card['levels']:
+                    levels = str(level['level']) + '|' + level['levelImage'] + '|'
+                    for ability in level['abilities']:
+                        levels += ability['name'] + ', ' + ability['description'] + '|'
+
                 new_card, created = Card.get_or_create(card_id=card['id'], card_name=card['name'],
-                                                       slot_type=card['slotType'], icon=card['icon'],
+                                                       template=card['template'],
                                                        rarity=card['rarity'], affinity=card['affinity'],
-                                                       cost=card['cost'], upgrade_slots=card['upgradeSlots'],
-                                                       effects=card_effects, maxed_effects=max_effects)
+                                                       gold_cost=gold_cost, agility_cost=agility_cost,
+                                                       vitality_cost=vitality_cost, intellect_cost=intellect_cost,
+                                                       trait=trait, levels=levels)
                 new_card.save()
     except Exception as e:
         logging.exception(e)
 
 
-def set_aram():
-    # TODO
-    print()
+def set_gems():
+    if 'gem' not in PARAGON_DB.get_tables():
+        Gem.create_table()
+
+    url = 'https://api.agora.gg/v2/gems'
+
+    try:
+        with requests.get(url=url) as r:
+            js = r.json()
+            for gem in js:
+                new_gem, created = Gem.get_or_create(gem_name=gem['name'], gem_id=gem['id'], template=gem['template'],
+                                                     description=gem['description'], slot=gem['slot'],
+                                                     stone=gem['stone'], shape=gem['shape'])
+                new_gem.save()
+    except Exception as e:
+        logging.exception(e)
+
+
+def setup_tables(client):
+    set_players()
+    set_heroes()
+    set_cards()
+    set_gems()
+    set_tournaments()
+    set_servers(client)
+    set_teams()

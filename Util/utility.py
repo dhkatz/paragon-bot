@@ -2,84 +2,56 @@ import discord
 from Database.database import *
 from API import AgoraAPI
 
-CARD_MAP = {'description:': '', '{attr:mpreg}': 'Mana Regen', '{attr:mp}': 'Mana', '{attr:hpreg}': 'HP Regen',
-            '{attr:hp}': 'HP', 'stat:': '', 'value:': '', 'BasicResistanceRating,': 'Basic Armor: ',
-            'AbilityResistanceRating,': 'Ability Armor: ', 'AttackSpeedRating,': 'Attack Speed: ',
-            'AttackRating,': 'Power: ', 'AbilityRating,': 'Power: ', 'MaxEnergy,': 'Max Mana: ',
-            'CriticalDamageChance,': 'Crit Chance: ', 'MaxHealth,': 'Health: ', 'HealthRegenRate,': 'Health Regen: ',
-            'EnergyRegenRate,': 'Mana Regen: ', 'LifeStealRating,': 'Life Steal: ',
-            'BasicPenetrationRating,': 'Basic Pen: ', 'AbilityPenetrationRating,': 'Ability Pen: '}
+AFFINITY_MAP = {'Chaos': discord.Colour.dark_red(), 'Order': discord.Colour.gold(), 'Growth': discord.Colour.green(),
+                'Knowledge': discord.Colour.blue(), 'Death': discord.Colour.dark_purple()}
+STONE_MAP = {'Agility': discord.Colour.orange(), 'Intellect': discord.Colour.purple(),
+             'Vitality': discord.Colour.green()}
 
-
-def replace_stat(stat):
-    """Replace raw card data with user friendly strings."""
-    mapped = stat
-    for k, v in CARD_MAP.items():
-        mapped = mapped.replace(k, v)
-    if 'Crit Chance' in mapped:
-        if '0.0' in stat:
-            mapped = mapped.replace('0.0', '') + '%'
-        elif '0.' in stat:
-            mapped = mapped.replace('0.', '') + '%'
-    return mapped
+TRAIT_MAP = {'Cultivate': 'Gold cost is reduced per attribute point purchased.',
+             'Elevate': 'Increases effectiveness of passive per attribute point purchased.',
+             'Combustible': 'Effect disappears upon death', 'Cursed': 'Card cannot be unequipped.',
+             'Consumable': 'Card is removed after activation.'}
 
 
 def build_card(card):
     """Build a Discord embed for a card and return it."""
     embed = discord.Embed()
 
-    description = max_description = bonus = max_bonus = ''
-
     if Card.select().where(Card.card_name == card).count() > 0:
         result = Card.select().where(Card.card_name == card).get()
     else:
         result = Card.select().where(Card.card_name.contains(card)).get()
 
-    basic = 'Affinity: ' + result.affinity + '\n'
-    basic += 'Rarity: ' + result.rarity + '\n'
-    basic += 'Type: ' + result.slot_type + '\n'
-    basic += 'Cost: ' + result.cost + '\n'
-
-    effects = str(result.effects)
-    for effect in effects.split('|'):
-        if 'description:' in effect:
-            description += replace_stat(stat=effect)
-        else:
-            bonus += replace_stat(stat=effect) + '\n'
-
-    max_effects = str(result.maxed_effects)
-    for effect in max_effects.split('|'):
-        if 'description:' in effect:
-            max_description += replace_stat(stat=effect)
-        else:
-            max_bonus += replace_stat(stat=effect) + '\n'
     embed.title = result.card_name
-    embed.url = 'https://agora.gg/card/' + result.card_id
-    embed.add_field(name='Basic', value=basic)
-    embed.add_field(name='Bonus', value=bonus)
-    if len(max_bonus) > 1:
-        embed.add_field(name='Upgrade Bonus', value=max_bonus)
-    if len(description) > 0:
-        header = ''
-        if 'unique:True' in description:
-            description = description.replace(',unique:True', '')
-            header += 'Unique '
-            if 'passive:True' in description:
-                description = description.replace(',passive:True', '')
-                header += 'Passive'
-            else:
-                header += 'Active'
-        embed.add_field(name=header, value=description, inline=False)
-    if len(max_description) > 0:
-        max_header = 'Upgrade '
-        if 'unique:True' in max_description:
-            max_description = max_description.replace(',unique:True', '')
-            max_header += 'Unique '
-            if 'passive:True' in max_description:
-                max_description = max_description.replace(',passive:True', '')
-                max_header += 'Passive'
-            else:
-                max_header += 'Active'
-        embed.add_field(name=max_header, value=max_description, inline=False)
+    embed.colour = AFFINITY_MAP[result.affinity]
+    embed.description = result.affinity + ' | ' + result.rarity
+    if result.trait is not None:
+        embed.add_field(name='**' + result.trait + '**', value=TRAIT_MAP[result.trait], inline=False)
+    for effect in result.levels.split('|')[2:]:
+        if len(effect) > 0:
+            embed.add_field(name=effect.split(',', 1)[0], value=effect.split(',', 1)[1], inline=False)
+    url = 'https://static.agora.gg/cards2/' + result.card_name.replace(' ', '').replace('-', '').replace('\'',
+                                                                                                         '').lower() + '-275.jpg'
+    embed.set_thumbnail(url=url)
+    embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+    return embed
+
+
+def build_gem(gem):
+    """Build a Discord embed for a gem and return it."""
+    embed = discord.Embed()
+
+    if Gem.select().where(Gem.gem_name == gem).count() > 0:
+        result = Gem.select().where(Gem.gem_name == gem).get()
+    else:
+        result = Gem.select().where(Gem.gem_name.contains(gem)).get()
+
+    embed.title = result.gem_name
+    embed.colour = STONE_MAP[result.stone]
+    embed.description = result.description
+    embed.add_field(name='**Stone**', value=result.stone)
+    embed.add_field(name='**Slot**', value=str(result.slot))
+    embed.add_field(name='**Shape**', value=result.shape)
+    # embed.set_thumbnail(url='https://agora.gg/assets/image/deck/' + result.stone + '-' + result.shape + '.png')
     embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
     return embed
