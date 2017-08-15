@@ -5,7 +5,7 @@ import sys
 import aiohttp
 from discord.ext import commands
 
-from Util import checks
+from util import checks
 
 
 class Admin():

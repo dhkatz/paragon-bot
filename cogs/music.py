@@ -2,8 +2,8 @@ import asyncio
 
 from discord.ext import commands
 
-from Database.database import *
-from Util import checks
+from database.database import *
+from util import checks
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
@@ -134,7 +134,7 @@ class Music:
         https://rg3.github.io/youtube-dl/supportedsites.html
         """
         if len(song) == 0:
-            await self.bot.send_message(ctx.message.channel, content='No song specified!')
+            await self.bot.say('No song specified!')
             return
 
         state = self.get_voice_state(ctx.message.server)
@@ -152,7 +152,7 @@ class Music:
             player = await state.voice.create_ytdl_player(song, ytdl_options=opts, after=state.toggle_next)
         except Exception as e:
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
-            await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
+            await self.bot.say(fmt.format(type(e).__name__, e))
         else:
             player.volume = 0.6
             entry = VoiceEntry(ctx.message, player)

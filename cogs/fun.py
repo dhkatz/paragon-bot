@@ -16,8 +16,7 @@ class Fun:
         async with aiohttp.get(url) as r:
             if r.status == 200:
                 js = await r.json()
-                await self.bot.send_message(ctx.message.channel, js['file'])
-                await self.bot.edit_profile()
+                await self.bot.say(js['file'])
 
     @commands.command(pass_context=True)
     async def shitpost(self, ctx):

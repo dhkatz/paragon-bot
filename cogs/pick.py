@@ -3,7 +3,7 @@ import random
 from discord.ext import commands
 
 from API import AgoraAPI
-from Database.database import *
+from database.database import *
 
 
 class Pick:
@@ -22,7 +22,7 @@ class Pick:
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, content=ctx.message.author.mention + ' Play:', embed=embed)
+        await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
     async def pick5(self, ctx):
@@ -42,7 +42,7 @@ class Pick:
         embed.title = heroes
         embed.url = 'https://agora.gg/heroes'
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def pick10(self, ctx, mirror: bool = False):
@@ -76,7 +76,7 @@ class Pick:
         embed.description = heroes.split('|')[1]
         embed.url = 'https://agora.gg/heroes'
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def pickteam(self, ctx):
@@ -89,7 +89,7 @@ class Pick:
             hero = Hero.select().where(Hero.roles.contains(role) & Hero.id.not_in(picked)).order_by(fn.Random()).get()
             picked.append(hero.id)
             embed.add_field(name=name, value=hero.hero_name, inline=False)
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True, aliases=['pickadc'])
     async def pickcarry(self, ctx):
@@ -101,7 +101,7 @@ class Pick:
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, content=ctx.message.author.mention + ' Play:', embed=embed)
+        await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
     async def picksupport(self, ctx):
@@ -113,7 +113,7 @@ class Pick:
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, content=ctx.message.author.mention + ' Play:', embed=embed)
+        await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
     async def pickmid(self, ctx):
@@ -125,7 +125,7 @@ class Pick:
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, content=ctx.message.author.mention + ' Play:', embed=embed)
+        await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
     async def pickoff(self, ctx):
@@ -137,7 +137,7 @@ class Pick:
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, content=ctx.message.author.mention + ' Play:', embed=embed)
+        await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
     async def pickjungle(self, ctx):
@@ -149,7 +149,7 @@ class Pick:
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, content=ctx.message.author.mention + ' Play:', embed=embed)
+        await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
 
 def setup(bot):

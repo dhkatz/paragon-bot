@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 import discord
 
-from Database.database import *
+from database.database import *
 
 icon_url = 'https://vignette2.wikia.nocookie.net/paragonthegame/images/f/f4/Paragon-logo.png'
 

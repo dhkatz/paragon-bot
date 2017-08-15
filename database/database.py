@@ -12,6 +12,8 @@ HERO_FILE = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon-Disco
 HEROES = configparser.ConfigParser()
 HEROES.read(HERO_FILE)
 
+logger = logging.getLogger('discord')
+
 
 class BaseModel(Model):
     class Meta:
@@ -75,7 +77,6 @@ class Event(BaseModel):
 class Card(BaseModel):
     card_id = CharField(unique=True)  # Unique Card ID
     card_name = CharField()
-    template = CharField()
     rarity = CharField()
     affinity = CharField()
     trait = CharField(null=True)
@@ -119,7 +120,7 @@ def set_heroes():
                                                            agora_data_name=hero['code'], roles=lane)
                     new_hero.save()
     except Exception as e:
-        logging.exception(e)
+        logger.exception(e)
 
 
 def set_players():
@@ -135,7 +136,7 @@ def set_tournaments():
 def update_tournaments():
     for event in Event.select().where(not Event.confirmed):
         if event.created < datetime.datetime.utcnow() - datetime.timedelta(minutes=5):
-            logging.info(f'Deleted unconfirmed tournament with ID {event.tournament_id}!')
+            logger.info(f'Deleted unconfirmed tournament with ID {event.tournament_id}!')
             event.delete_instance()
 
 
@@ -150,7 +151,7 @@ def set_teams():
 
 
 async def add_server(client: discord.Client, server: discord.Server):
-    print('NOTICE: Adding server ' + server.name + ' to database...')
+    logger.info('Adding server ' + server.name + ' to database...')
     can_manage = False
     for role in server.me.roles:
         if role.permissions.manage_roles:
@@ -168,7 +169,7 @@ async def add_server(client: discord.Client, server: discord.Server):
             guild = Server(server_id=server.id, server_name=server.name, use_music_role=True,
                            music_role_id=music_role.id)
             guild.save()
-            print('NOTICE: Added server ' + server.name + ' to database!')
+            logger.info('Added server ' + server.name + ' to database!')
             return
 
     music_permissions = server.default_role
@@ -178,16 +179,16 @@ async def add_server(client: discord.Client, server: discord.Server):
                                           colour=discord.Color(11815924), mentionable=False)
     guild = Server(server_id=server.id, server_name=server.name, use_music_role=True, music_role_id=music_role.id)
     guild.save()
-    print('NOTICE: Added server ' + server.name + ' to database!')
+    logger.info('Added server ' + server.name + ' to database!')
 
 
 async def remove_server(server: discord.Server):
-    print('NOTICE: Removing ' + server.name + ' from database...')
+    logger.info('Removing ' + server.name + ' from database...')
     try:
         server_left = Server.get(Server.server_id == server.id)
         server_left.delete_instance()
     except DoesNotExist:
-        'ERROR: Somehow a server we left did not exist in the database!'
+        logger.error('Somehow a server we left did not exist in the database!')
 
 
 def set_cards():
@@ -213,14 +214,13 @@ def set_cards():
                         levels += ability['name'] + ', ' + ability['description'] + '|'
 
                 new_card, created = Card.get_or_create(card_id=card['id'], card_name=card['name'],
-                                                       template=card['template'],
                                                        rarity=card['rarity'], affinity=card['affinity'],
                                                        gold_cost=gold_cost, agility_cost=agility_cost,
                                                        vitality_cost=vitality_cost, intellect_cost=intellect_cost,
                                                        trait=trait, levels=levels)
                 new_card.save()
     except Exception as e:
-        logging.exception(e)
+        logger.exception(e)
 
 
 def set_gems():
@@ -238,7 +238,7 @@ def set_gems():
                                                      stone=gem['stone'], shape=gem['shape'])
                 new_gem.save()
     except Exception as e:
-        logging.exception(e)
+        logger.exception(e)
 
 
 def setup_tables(client):

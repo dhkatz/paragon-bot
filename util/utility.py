@@ -1,5 +1,5 @@
 import discord
-from Database.database import *
+from database.database import *
 from API import AgoraAPI
 
 AFFINITY_MAP = {'Chaos': discord.Colour.dark_red(), 'Order': discord.Colour.gold(), 'Growth': discord.Colour.green(),

@@ -3,7 +3,7 @@ from urllib.parse import quote
 import peewee
 from discord.ext import commands
 
-from Util.utility import *
+from util.utility import *
 
 
 class Agora:
@@ -19,7 +19,7 @@ class Agora:
         embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
         embed.description = message
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def elo(self, ctx):
@@ -55,7 +55,7 @@ class Agora:
             return
         else:
             embed = AgoraAPI.get_agora_player_elo(user_id)
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def stats(self, ctx):
@@ -92,7 +92,7 @@ class Agora:
         else:
             embed = AgoraAPI.get_agora_player_stats(user_id)
 
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def lpg(self, ctx):
@@ -129,7 +129,7 @@ class Agora:
         else:
             embed = AgoraAPI.get_agora_player_latest_game_stats(user_id, 0)
 
-        await self.bot.send_message(ctx.message.channel, embed=embed)
+        await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True, aliases=['deck', 'd'])
     async def herodeck(self, ctx):
@@ -151,7 +151,7 @@ class Agora:
 
         for i in range(0, 3):
             embed = AgoraAPI.get_agora_hero_deck(hero_name=results.hero_name, image=results.icon, num=i)
-            await self.bot.send_message(ctx.message.channel, embed=embed)
+            await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True, aliases=['guide', 'g'])
     async def heroguide(self, ctx):
@@ -173,7 +173,7 @@ class Agora:
 
         for i in range(0, 3):
             embed = AgoraAPI.get_agora_hero_deck(hero_name=results.agora_hero_id, image=results.icon, num=i)
-            await self.bot.send_message(ctx.message.channel, embed=embed)
+            await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def card(self, ctx, *args):
@@ -195,7 +195,7 @@ class Agora:
                     return
                 else:
                     embed = build_card(search)
-            await self.bot.send_message(ctx.message.channel, embed=embed)
+            await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def gem(self, ctx, *args):
@@ -217,7 +217,7 @@ class Agora:
                     return
                 else:
                     embed = build_gem(search)
-            await self.bot.send_message(ctx.message.channel, embed=embed)
+            await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
     async def ign(self, ctx, epic_id: str = ''):
@@ -253,7 +253,7 @@ class Agora:
                 embed.url = 'https://agora.gg/profile/' + player.agora_player_id + '/' + quote(player.player_name,
                                                                                                safe='')
                 embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-                await self.bot.send_message(ctx.message.channel, embed=embed)
+                await self.bot.say(embed=embed)
             except peewee.DoesNotExist:
                 await self.embed_notify(ctx, 1, 'Error',
                                         'No player name specified and no Epic ID was found linked to your account!\n(See \'' + self.bot.command_prefix + 'help ign\' for more command information!)')

@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
-from Database.database import *
+from database.database import *
 import config.load as config
 
 
 def check_permissions(ctx, perms, *, check=all):
-    is_owner = ctx.message.author.id == config.__ownerid__
-    if is_owner:
+    owner = ctx.message.author.id == config.__ownerid__
+    if owner:
         return True
 
     resolved = ctx.channel.permissions_for(ctx.author)
@@ -21,8 +21,8 @@ def has_permissions(*, check=all, **perms):
 
 
 def check_guild_permissions(ctx: commands.Context, perms, *, check=all):
-    is_owner = ctx.message.author.id == config.__ownerid__
-    if is_owner:
+    owner = ctx.message.author.id == config.__ownerid__
+    if owner:
         return True
 
     if ctx.message.server is None:
