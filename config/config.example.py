@@ -2,6 +2,7 @@
 __token__ = 'YOUR TOKEN HERE'
 __prefix__ = '.'
 __ownerid__ = 'YOUR DISCORD ID'
+__cleverbot__ = ''
 
 # BOT COG CONFIGURATION
 __cogs__ = [

@@ -7,12 +7,13 @@ from collections import Counter
 from logging.handlers import RotatingFileHandler
 
 import discord
+from cleverwrap import CleverWrap
 from discord.ext import commands
 
-import database.database as db
 import config.load as config
+import database.database as db
 
-__version__ = '0.14.1'
+__version__ = '0.15.1'
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -49,6 +50,7 @@ async def on_ready():
     bot.start_time = time.time()
     bot.commands_used = Counter()
     bot.owner = discord.utils.find(lambda u: u.id == config.__ownerid__, bot.get_all_members())
+    bot.clever = CleverWrap(config.__cleverbot__)
     await bot.change_presence(game=BOT_STATUS)
     await setup_data_tables(bot)
 
@@ -98,6 +100,12 @@ async def on_server_remove(server):
     logger.info(f'Bot left server: {server.name}')
     await db.remove_server(server)
 
+
+@bot.event
+async def on_message(message):
+    if bot.user.mentioned_in(message):
+        await bot.send_message(message.channel, bot.clever.say(message.clean_content))
+    await bot.process_commands(message)
 
 async def setup_data_tables(client):
     logger.info(f'Setting up data tables...')

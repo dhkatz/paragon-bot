@@ -10,7 +10,7 @@ icon_url = 'https://vignette2.wikia.nocookie.net/paragonthegame/images/f/f4/Para
 
 
 def get_agora_player_id(username):
-    url = 'https://api.agora.gg/v1/players/search/' + username + '?lc=en&ssl=true'
+    url = 'https://api.agora.gg/v1/players/search?name=' + username
     player_id = 'null'
     try:
         with requests.get(url=url) as r:
@@ -209,7 +209,7 @@ def get_agora_player_latest_game_stats(player_id, num):
     end_month = str(now.replace(month=now.month + 1).month)
     end_day = str(now.replace(month=now.month + 1).day)
 
-    url = 'https://api.agora.gg/v1/players/' + player_id + '/history/match/?page=0&start=' + start_year + '-'
+    url = 'https://api.agora.gg/v1/players/' + player_id + '/history/match?page=0&start=' + start_year + '-'
     url += start_month + '-01T00:00:00Z&end=' + end_year + '-' + end_month + '-' + end_day + 'T00:00:00Z&lc=en&ssl=true'
     embed = discord.Embed()
 
@@ -225,7 +225,7 @@ def get_agora_player_latest_game_stats(player_id, num):
                     for i in range(2):
                         for player in js[num]['teams'][i]:
                             if str(player['id']) == player_id:
-                                winning_team = 'Won' if js[num]['winningTeam'] == 0 else 'Lost'
+                                winning_team = 'Won' if js[num]['winningTeam'] == i else 'Lost'
 
                                 k = player['kills']
                                 d = player['deaths']
@@ -236,7 +236,7 @@ def get_agora_player_latest_game_stats(player_id, num):
                                 embed.title = 'Game Played: ' + js[num][
                                     'createdAt'].split('T')[0] + ' (UTC)' + ' Time: ' + final_time + ':' + seconds
                                 embed.url = 'https://agora.gg/game/' + js[num]['id']
-                                embed.colour = discord.Colour.blue()
+                                embed.colour = discord.Colour.green() if winning_team == 'Won' else discord.Colour.dark_red()
                                 hero = Hero.select().where(Hero.agora_data_name % player['hero']).get()
                                 embed.description = 'Played as ' + hero.hero_name + '. Level ' + str(
                                     player['level']) + '. Player has played ' + str(

@@ -52,7 +52,7 @@ class Info:
         try:
             commands_chart = sorted(self.bot.commands_used.items(), key=lambda t: t[1], reverse=False)
             top_command = commands_chart.pop()
-            command_info = f'{sum(self.bot.commands_used.values())} (Top Command: {top_command[1]} x {top_command[0]}'
+            command_info = f'{sum(self.bot.commands_used.values())} (Top Command: {top_command[0]} [x{top_command[1]}])'
         except IndexError:
             command_info = str(sum(self.bot.commands_used.values()))
 

@@ -28,7 +28,7 @@ class Tournament:
         embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
         embed.description = message
         embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
-        await self.bot.say(embed=embed)
+        await self.bot.send_message(ctx.message.channel, embed=embed)
 
     @commands.group(pass_context=True)
     async def tournament(self, ctx):
@@ -57,6 +57,9 @@ class Tournament:
             return
         except DoesNotExist:
             pass
+        if tournament_type.upper() not in self.types:
+            await self.embed_notify(ctx, 1, 'Error', 'Invalid tournament type!')
+            return
         try:
             tournament_time = datetime.datetime.strptime(date, '%m-%d-%Y %H:%M')
             if tournament_time > datetime.datetime.now() + datetime.timedelta(days=30):
@@ -64,9 +67,6 @@ class Tournament:
                                         'Unable to create a tournament scheduled for more than a month from now!')
         except:
             await self.embed_notify(ctx, 1, 'Error', 'Invalid time format! Please try again.')
-            return
-        if tournament_type.upper() not in self.types:
-            await self.embed_notify(ctx, 1, 'Error', 'Invalid tournament type!')
             return
         tournament = Event(server_id=ctx.message.server.id, server_name=ctx.message.server.name, tournament_name=name,
                            type=tournament_type.upper(), event_date=tournament_time,
@@ -127,6 +127,7 @@ class Tournament:
             for player in Player.select().where(
                     Player.tournaments.contains(ctx.message.server.id)):  # Remove the tournament from players!
                 player.tournaments = str(player.tournaments).replace(ctx.message.server.id + '|', '')
+                player.save()
             await self.embed_notify(ctx, 2, 'Tournament Deleted',
                                     'Deleted the tournament called **' + tournament.tournament_name + '**.')
             tournament.delete_instance()

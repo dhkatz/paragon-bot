@@ -2,6 +2,7 @@
 __token__ = 'MzA4MDMyNTUyMjQzODIyNjAy.DGMkdg.EFYatb8fffY1lFllLdwfb04NVBE'
 __prefix__ = '.'
 __ownerid__ = '133319035642314752'
+__cleverbot__ = 'CC3woIYexiZDYJFITRrly4-V0uw'
 
 # BOT COG CONFIGURATION
 __cogs__ = [
