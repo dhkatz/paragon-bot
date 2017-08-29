@@ -1,7 +1,9 @@
-from discord.ext import commands
-import praw
 import logging
-import config.load as config
+
+import praw
+from discord.ext import commands
+
+import data.config.load as config
 
 
 class Reddit:
@@ -11,12 +13,13 @@ class Reddit:
         self.bot = bot
         self.logger = logging.getLogger('discord')
         self.user_agent = '/r/Paragon Post Collection Bot'
+        self.subreddit_name = 'doctorjewtest'
         self.reddit = praw.Reddit(user_agent=self.user_agent, client_id=config.__reddit__['client_id'],
                                   client_secret=config.__reddit__['client_secret'],
                                   username=config.__reddit__['username'],
                                   password=config.__reddit__['password'])
         # Make sure we are logged in!
-        self.logger.info('Logged into Reddit as ' + self.reddit.user.me())
+        self.logger.info('Logged into Reddit as ' + str(self.reddit.user.me()))
 
     @commands.command(pass_context=True)
     async def reddit(self, ctx):

@@ -1,12 +1,12 @@
+import logging
 from datetime import datetime
 from time import time
 
 from discord.ext import commands
 
 from API import AgoraAPI
+from cogs.util import checks
 from database.database import *
-from util import checks
-import logging
 
 
 class Tournament:

@@ -3,7 +3,7 @@ import asyncio
 from discord.ext import commands
 
 from database.database import *
-from util import checks
+from cogs.util import checks
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
@@ -184,6 +184,7 @@ class Music:
         if state.is_playing():
             player = state.player
             player.pause()
+            await self.bot.say('**Music has been paused.**')
         else:
             await self.bot.say('**No music is currently playing!**')
 
@@ -195,6 +196,9 @@ class Music:
         if state.is_playing():
             player = state.player
             player.resume()
+            await self.bot.say('**Music has been resumed.**')
+        else:
+            await self.bot.say('**No music is currently playing!**')
 
     @commands.command(pass_context=True, no_pm=True)
     @checks.is_music()

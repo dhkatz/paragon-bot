@@ -6,7 +6,8 @@ import re
 
 import aiohttp
 from discord.ext import commands
-
+from gtts import gTTS
+from urllib.parse import quote
 
 class Fun:
     """Miscellaneous fun commands."""
@@ -53,6 +54,20 @@ class Fun:
             self.logger.info(base)
         self.words.reload()
         await self.bot.say(base)
+
+    @commands.command(pass_context=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def goodnight(self, ctx):
+        """Goodnight Jackson"""
+        await self.bot.say('goodnight Jackson')
+
+    @commands.command(pass_context=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def tts(self, ctx, message: str):
+        """Have the bot join your channel and say what you said."""
+        # Thanks to https://stackoverflow.com/questions/9893175/google-text-to-speech-api/31791632#31791632
+        tts = gTTS(text=message, lang='en')
+        tts.save('temp.mp3')
 
     @commands.command(pass_context=True)
     @commands.cooldown(3, 60, commands.BucketType.user)

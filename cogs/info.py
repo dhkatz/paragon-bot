@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from memory_profiler import memory_usage
 
-from util import checks
+from cogs.util import checks
 
 
 class Info:
@@ -25,9 +25,10 @@ class Info:
         """Returns information about the bot's avatar."""
         embed = discord.Embed()
         embed.title = 'Bot Avatar Information'
+        embed.colour = discord.Colour.blue()
         embed.url = self.bot.user.avatar_url
         embed.set_thumbnail(
-            url='https://pre09.deviantart.net/d30c/th/pre/i/2017/043/7/b/paragon___countess_by_saidrawing-dayvw0q.png')
+            url='https://i.imgur.com/HI8kV9c.png')
         embed.add_field(name='Artist', value='SaiDrawing', inline=False)
         await self.bot.say(embed=embed)
 
@@ -36,7 +37,7 @@ class Info:
     async def _name(self, ctx, name: str):
         """Change the bot's username. OWNER ONLY."""
         await self.bot.edit_profile(username=name)
-        embed = discord.Embed(title='Success', description='Changed my name to ' + name, colour=188426)
+        embed = discord.Embed(title='Success', description='Changed my name to ' + name, colour=discord.Colour.green())
         await self.bot.say(embed=embed)
 
     @info.command(name='status', pass_context=True, aliases=['uptime', 'up'])

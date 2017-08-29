@@ -3,7 +3,7 @@ from urllib.parse import quote
 import peewee
 from discord.ext import commands
 
-from util.utility import *
+from cogs.util.utility import *
 
 
 class Agora:
@@ -87,7 +87,7 @@ class Agora:
                                         'The user you entered does not seem exist, please re-check the name!')
             else:
                 await self.embed_notify(ctx, 1, 'Error',
-                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .elo <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
+                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .stats <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
             return
         else:
             embed = AgoraAPI.get_agora_player_stats(user_id)
@@ -124,7 +124,7 @@ class Agora:
                                         'The user you entered does not seem exist, please re-check the name!')
             else:
                 await self.embed_notify(ctx, 1, 'Error',
-                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .elo <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
+                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .lpg <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
             return
         else:
             embed = AgoraAPI.get_agora_player_latest_game_stats(user_id, 0)

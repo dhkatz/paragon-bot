@@ -101,4 +101,6 @@ ENV/
 .mypy_cache/
 .idea/
 *.log.*
+*.mp3
+*.json
 config.py

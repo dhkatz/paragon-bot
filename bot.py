@@ -10,7 +10,7 @@ import discord
 from cleverwrap import CleverWrap
 from discord.ext import commands
 
-import config.load as config
+import data.config.load as config
 import database.database as db
 
 __version__ = '0.15.1'
@@ -76,6 +76,10 @@ async def on_command_error(error, ctx):
                 await bot.send_message(bot.owner, embed=embed)
             except:
                 pass
+    elif isinstance(error, commands.CommandOnCooldown):
+        embed = discord.Embed(title='Command Cooldown', colour=discord.Colour.dark_red(),
+                              description=f'You\'re on cooldown! Try again in {str(error)[34:]}.')
+        await bot.send_message(ctx.message.channel, embed=embed)
 
 
 @bot.event
@@ -102,8 +106,10 @@ async def on_server_remove(server):
 
 
 @bot.event
-async def on_message(message):
-    if bot.user.mentioned_in(message):
+async def on_message(message: discord.Message):
+    if message.author.bot or message.author.id in config.__blacklist__:
+        return
+    if bot.user.mentioned_in(message) and not message.mention_everyone:
         await bot.send_message(message.channel, bot.clever.say(message.clean_content))
     await bot.process_commands(message)
 
