@@ -1,9 +1,6 @@
-import random
-
 from discord.ext import commands
 
-from API import AgoraAPI
-from database.database import *
+from cogs.database import *
 
 
 class Pick:
@@ -11,17 +8,18 @@ class Pick:
 
     def __init__(self, bot):
         self.bot = bot
+        self.agora = self.bot.get_cog('Agora')  # Requires the Agora extension be loaded
 
     @commands.command(pass_context=True)
     async def pick(self, ctx):
         """Pick a random hero."""
 
         embed = discord.Embed()
-        hero = Hero.get(Hero.id == random.randint(1, Hero.select().count()))
+        hero = self.agora.random_hero()
         embed.title = hero.hero_name
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
@@ -31,7 +29,7 @@ class Pick:
         picked = []
         heroes = ''
         while len(picked) < 5:
-            hero = Hero.get(Hero.id == random.randint(1, Hero.select().count()))
+            hero = self.agora.random_hero()
             if hero.id in picked:
                 continue
             picked.append(hero.id)
@@ -41,7 +39,7 @@ class Pick:
                 heroes += hero.hero_name
         embed.title = heroes
         embed.url = 'https://agora.gg/heroes'
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
@@ -51,7 +49,7 @@ class Pick:
         heroes = ''
         embed = discord.Embed()
         while len(picked) < 5:
-            hero = Hero.get(Hero.id == random.randint(1, Hero.select().count()))
+            hero = self.agora.random_hero()
             if hero.id in picked:
                 continue
             picked.append(hero.id)
@@ -63,7 +61,7 @@ class Pick:
             picked.clear()
         size = len(picked)
         while len(picked) < size + 5:
-            hero = Hero.get(Hero.id == random.randint(1, Hero.select().count()))
+            hero = self.agora.random_hero()
             if hero.id in picked:
                 continue
             picked.append(hero.id)
@@ -75,7 +73,7 @@ class Pick:
         embed.title = heroes.split('|')[0]
         embed.description = heroes.split('|')[1]
         embed.url = 'https://agora.gg/heroes'
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(embed=embed)
 
     @commands.command(pass_context=True)
@@ -86,7 +84,12 @@ class Pick:
         embed = discord.Embed()
         embed.title = 'Team Picks'
         for role, name in roles.items():
-            hero = Hero.select().where(Hero.roles.contains(role) & Hero.id.not_in(picked)).order_by(fn.Random()).get()
+            found = False
+            while not found:
+                hero = self.agora.role_hero(role)
+                if hero.id in picked:
+                    continue
+                found = True
             picked.append(hero.id)
             embed.add_field(name=name, value=hero.hero_name, inline=False)
         await self.bot.say(embed=embed)
@@ -96,11 +99,11 @@ class Pick:
         """Pick a random ADC."""
 
         embed = discord.Embed()
-        hero = Hero.select().where(Hero.roles.contains('ADC')).order_by(fn.Random()).get()
+        hero = self.agora.role_hero('ADC')
         embed.title = hero.hero_name
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
@@ -108,11 +111,11 @@ class Pick:
         """Pick a random Support."""
 
         embed = discord.Embed()
-        hero = Hero.select().where(Hero.roles.contains('SUPP')).order_by(fn.Random()).get()
+        hero = self.agora.role_hero('SUPP')
         embed.title = hero.hero_name
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
@@ -120,11 +123,11 @@ class Pick:
         """Pick a random Midlaner."""
 
         embed = discord.Embed()
-        hero = Hero.select().where(Hero.roles.contains('MID')).order_by(fn.Random()).get()
+        hero = self.agora.role_hero('MID')
         embed.title = hero.hero_name
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
@@ -132,11 +135,11 @@ class Pick:
         """Pick a random Offlaner."""
 
         embed = discord.Embed()
-        hero = Hero.select().where(Hero.roles.contains('OFF')).order_by(fn.Random()).get()
+        hero = self.agora.role_hero('OFF')
         embed.title = hero.hero_name
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
     @commands.command(pass_context=True)
@@ -144,11 +147,11 @@ class Pick:
         """Pick a random jungler."""
 
         embed = discord.Embed()
-        hero = Hero.select().where(Hero.roles.contains('JUNG')).order_by(fn.Random()).get()
+        hero = self.agora.role_hero('JUNG')
         embed.title = hero.hero_name
         embed.url = 'https://agora.gg/hero/' + hero.agora_hero_id
         embed.set_thumbnail(url=hero.icon)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(content=ctx.message.author.mention + ' Play:', embed=embed)
 
 

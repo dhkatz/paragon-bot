@@ -1,21 +1,42 @@
-import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time
 
 from discord.ext import commands
 
-from API import AgoraAPI
+from cogs.database import *
 from cogs.util import checks
-from database.database import *
 
 
 class Tournament:
     """Create and run tournaments on your Discord server."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
+        self.agora = self.bot.get_cog('Agora')
         self.types = ['ARAM', 'STANDARD']
-        self.logger = logging.getLogger('discord')
+        self.bot.scheduler.add_job(self.check_tournaments, 'interval', minutes=1)
+        self.set_tournaments()
+        self.set_teams()
+
+    def set_tournaments(self):
+        if 'event' not in self.bot.db.get_tables():
+            self.bot.logger.info('Created database Event table')
+            Event.create_table()
+
+    def set_teams(self):
+        if 'team' not in self.bot.db.get_tables():
+            self.bot.logger.info('Created database Team table')
+            Team.create_table()
+
+    async def check_tournaments(self):
+        self.bot.logger.info(f'Checking unconfirmed tournaments...')
+        self.update_tournaments()
+
+    def update_tournaments(self):
+        for event in Event.select().where(not Event.confirmed):
+            if event.created < datetime.utcnow() - timedelta(minutes=5):
+                self.bot.logger.info(f'Deleted unconfirmed tournament with ID {event.tournament_id}!')
+                event.delete_instance()
 
     @property
     def random_id(self):
@@ -27,7 +48,7 @@ class Tournament:
         embed.title = title
         embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
         embed.description = message
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.send_message(ctx.message.channel, embed=embed)
 
     @commands.group(pass_context=True)
@@ -61,8 +82,8 @@ class Tournament:
             await self.embed_notify(ctx, 1, 'Error', 'Invalid tournament type!')
             return
         try:
-            tournament_time = datetime.datetime.strptime(date, '%m-%d-%Y %H:%M')
-            if tournament_time > datetime.datetime.now() + datetime.timedelta(days=30):
+            tournament_time = datetime.strptime(date, '%m-%d-%Y %H:%M')
+            if tournament_time > datetime.now() + timedelta(days=30):
                 await self.embed_notify(ctx, 1, 'Error',
                                         'Unable to create a tournament scheduled for more than a month from now!')
         except:
@@ -70,9 +91,9 @@ class Tournament:
             return
         tournament = Event(server_id=ctx.message.server.id, server_name=ctx.message.server.name, tournament_name=name,
                            type=tournament_type.upper(), event_date=tournament_time,
-                           confirmed=False, created=datetime.datetime.utcnow(), creator=ctx.message.author.id)
+                           confirmed=False, created=datetime.utcnow(), creator=ctx.message.author.id)
         tournament.save()
-        self.logger.info('New tournament created. Awaiting confirmation.')
+        self.bot.logger.info('New tournament created. Awaiting confirmation.')
         embed.title = name
         embed.description = 'Tournament Details'
         embed.colour = discord.Colour.blue()
@@ -82,7 +103,7 @@ class Tournament:
         embed.add_field(name='Confirmation',
                         value='Please confirm the event by typing **' + self.bot.command_prefix + 'tournament confirm [Event ID]**',
                         inline=False)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(embed=embed)
 
     @tournament.command(name='confirm', pass_context=True)
@@ -102,7 +123,7 @@ class Tournament:
         if found:
             await self.embed_notify(ctx, 0, 'Tournament Created',
                                     'Players can now join using **' + self.bot.command_prefix + 'tournament join**')
-            self.logger.info('Tournament confirmed with ID ' + unique_id)
+            self.bot.logger.info('Tournament confirmed with ID ' + unique_id)
         else:
             await self.embed_notify(ctx, 1, 'Error', 'No tournament was found with the provided ID!')
 
@@ -131,7 +152,7 @@ class Tournament:
             await self.embed_notify(ctx, 2, 'Tournament Deleted',
                                     'Deleted the tournament called **' + tournament.tournament_name + '**.')
             tournament.delete_instance()
-            self.logger.info('Tournament deleted from database')
+            self.bot.logger.info('Tournament deleted from database')
         except DoesNotExist:
             await self.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
 
@@ -212,7 +233,7 @@ class Tournament:
         embed.add_field(name='Type', value=tournament.type)
         embed.add_field(name='Teams', value=size)
         embed.add_field(name='Players', value=tournament.size)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(embed=embed)
 
     @tournament.group(name='team', pass_context=True)
@@ -250,7 +271,7 @@ class Tournament:
         embed.add_field(name='Team ID', value=team_id)
         embed.add_field(name='Event Name', value=tournament.tournament_name, inline=False)
         embed.add_field(name='Event ID', value=tournament.server_id)
-        embed.set_footer(text='Paragon', icon_url=AgoraAPI.icon_url)
+        embed.set_footer(text='Paragon', icon_url=self.agora.icon_url)
         await self.bot.say(embed=embed)
 
     @team.command(name='delete', pass_context=True)
@@ -292,6 +313,29 @@ class Tournament:
         if ctx.message.mentions is not None:
             for user in ctx.message.mentions:
                 print()
+
+
+class Team(BaseModel):
+    team_id = CharField(unique=True)  # Unique Team ID, assignable to players
+    team_name = CharField(null=True)  # Team's chosen name
+    tournament = CharField(unique=True)  # Tournament associated with team
+    team_elo = FloatField(default=0)  # Average team elo
+    role_id = CharField(null=True)  # Role for the team
+    channel_id = CharField(null=True)  # Text channel for the team
+    voice_channel_id = CharField(null=True)  # Voice channel for the team
+
+
+class Event(BaseModel):
+    server_id = CharField(unique=True)
+    server_name = CharField()
+    creator = CharField()
+    tournament_name = CharField()
+    type = CharField()
+    teams = TextField(null=True)
+    size = IntegerField(default=0)
+    confirmed = BooleanField(default=False)
+    created = DateTimeField()
+    event_date = DateTimeField()
 
 
 def setup(bot):

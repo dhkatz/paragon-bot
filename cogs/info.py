@@ -11,7 +11,7 @@ from cogs.util import checks
 class Info:
     """Information about the bot."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.group(pass_context=True)
@@ -43,7 +43,7 @@ class Info:
     @info.command(name='status', pass_context=True, aliases=['uptime', 'up'])
     async def _status(self, ctx: commands.Context):
         """Information about the bot's status."""
-        uptime = time.time() - self.bot.start_time
+        uptime = time.time() - self.bot.uptime
         hours = uptime / 3600
         minutes = (uptime / 60) % 60
         seconds = uptime % 60
@@ -51,11 +51,11 @@ class Info:
         users = 0
         channel = 0
         try:
-            commands_chart = sorted(self.bot.commands_used.items(), key=lambda t: t[1], reverse=False)
+            commands_chart = sorted(self.bot.counter.items(), key=lambda t: t[1], reverse=False)
             top_command = commands_chart.pop()
-            command_info = f'{sum(self.bot.commands_used.values())} (Top Command: {top_command[0]} [x{top_command[1]}])'
+            command_info = f'{sum(self.bot.counter.values())} (Top Command: {top_command[0]} [x{top_command[1]}])'
         except IndexError:
-            command_info = str(sum(self.bot.commands_used.values()))
+            command_info = str(sum(self.bot.counter.values()))
 
         bot_member = ctx.message.server.get_member(self.bot.user.id)
         for server in self.bot.servers:

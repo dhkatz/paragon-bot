@@ -2,7 +2,7 @@ import asyncio
 
 from discord.ext import commands
 
-from database.database import *
+from cogs.database import *
 from cogs.util import checks
 
 if not discord.opus.is_loaded():

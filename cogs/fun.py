@@ -5,23 +5,30 @@ import random
 import re
 
 import aiohttp
+import discord
 from discord.ext import commands
 from gtts import gTTS
-from urllib.parse import quote
+
 
 class Fun:
     """Miscellaneous fun commands."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('discord')
-        self.genwords, self.bases = {}, []
+        self.word_list, self.bases = {}, []
         self.words = Config(os.path.join(os.path.dirname(__file__), 'words.json'))
+        self.bot.scheduler.add_job(self.goodnight_jackson, 'cron', hour=22, minute=30)
+
+    async def goodnight_jackson(self):
+        self.logger.info('Saying goodnight to Jackson...')
+        channel = discord.utils.find(lambda c: c.id == '222462913724547072', self.bot.get_all_channels())
+        await self.bot.send_message(channel, 'Goodnight Jackson')
 
     def shitpost_sub(self, string, regex):
-        if regex not in self.genwords or not self.genwords[regex]:
-            self.genwords[regex] = self.words[self.words["@replaces"][regex]][:]
-        word = self.genwords[regex].pop(random.randrange(len(self.genwords[regex])))
+        if regex not in self.word_list or not self.word_list[regex]:
+            self.word_list[regex] = self.words[self.words["@replaces"][regex]][:]
+        word = self.word_list[regex].pop(random.randrange(len(self.word_list[regex])))
         return re.sub("%" + regex, word, string, 1)
 
     @commands.command(pass_context=True)
@@ -54,12 +61,6 @@ class Fun:
             self.logger.info(base)
         self.words.reload()
         await self.bot.say(base)
-
-    @commands.command(pass_context=True)
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    async def goodnight(self, ctx):
-        """Goodnight Jackson"""
-        await self.bot.say('goodnight Jackson')
 
     @commands.command(pass_context=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
