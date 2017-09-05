@@ -14,7 +14,7 @@ class Tournament:
         self.bot = bot
         self.agora = self.bot.get_cog('Agora')
         self.types = ['ARAM', 'STANDARD']
-        self.bot.scheduler.add_job(self.check_tournaments, 'interval', minutes=1)
+        self.bot.scheduler.add_job(self.update_tournaments, 'interval', minutes=1)
         self.set_tournaments()
         self.set_teams()
 
@@ -28,11 +28,8 @@ class Tournament:
             self.bot.logger.info('Created database Team table')
             Team.create_table()
 
-    async def check_tournaments(self):
+    async def update_tournaments(self):
         self.bot.logger.info(f'Checking unconfirmed tournaments...')
-        self.update_tournaments()
-
-    def update_tournaments(self):
         for event in Event.select().where(not Event.confirmed):
             if event.created < datetime.utcnow() - timedelta(minutes=5):
                 self.bot.logger.info(f'Deleted unconfirmed tournament with ID {event.tournament_id}!')

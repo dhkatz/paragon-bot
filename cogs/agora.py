@@ -9,7 +9,6 @@ import requests
 from discord.ext import commands
 
 from cogs.database import *
-from cogs.util.utility import *
 
 
 class Agora:
@@ -665,6 +664,17 @@ class Agora:
         # embed.set_thumbnail(url='https://agora.gg/assets/image/deck/' + result.stone + '-' + result.shape + '.png')
         embed.set_footer(text='Paragon', icon_url=self.icon_url)
         return embed
+
+
+AFFINITY_MAP = {'Chaos': discord.Colour.dark_red(), 'Order': discord.Colour.gold(), 'Growth': discord.Colour.green(),
+                'Knowledge': discord.Colour.blue(), 'Death': discord.Colour.dark_purple()}
+STONE_MAP = {'Agility': discord.Colour.orange(), 'Intellect': discord.Colour.purple(),
+             'Vitality': discord.Colour.green()}
+
+TRAIT_MAP = {'Cultivate': 'Gold cost is reduced per attribute point purchased.',
+             'Elevate': 'Increases effectiveness of passive per attribute point purchased.',
+             'Combustible': 'Effect disappears upon death', 'Cursed': 'Card cannot be unequipped.',
+             'Consumable': 'Card is removed after activation.'}
 
 
 class Hero(BaseModel):

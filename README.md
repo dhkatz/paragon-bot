@@ -1,9 +1,10 @@
 Paragon-Discord-Bot
 ===================
 
-[![Python3](https://img.shields.io/badge/python-3.6-blue.svg)](https://github.com/DoctorJew/Paragon-Discord-Bot)
-[![GitHub license](https://img.shields.io/aur/license/yaourt.svg)](https://raw.githubusercontent.com/DoctorJew/Paragon-Discord-Bot/master/LICENSE)
-[![Discord Server](https://img.shields.io/badge/Support-Discord%20Server-blue.svg)](https://discord.gg/kqSRzfU)
+[![forthebadge](http://forthebadge.com/images/badges/made-with-python.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/compatibility-club-penguin.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/powered-by-netflix.svg)](https://discord.gg/kqSRzfU)
+
 
 A Discord Bot built for use specifically in Paragon related Discord servers. Made with hate and [discord.py](https://github.com/Rapptz/discord.py).
 This bot is not designed to be setup by anyone else, but it's design intention is easy to understand.
