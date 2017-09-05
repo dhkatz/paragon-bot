@@ -10,3 +10,5 @@ except ImportError:
     __cleverbot__ = os.environ.get(' CLEVERBOT_API ')
     __reddit__ = os.environ.get(' REDDIT_LOGIN ')
 # LOAD BOT MODULES
+from data.config.config import __cogs__
+from data.config.blacklist import __blacklist__

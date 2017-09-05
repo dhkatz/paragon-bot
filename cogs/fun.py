@@ -31,20 +31,30 @@ class Fun:
         word = self.word_list[regex].pop(random.randrange(len(self.word_list[regex])))
         return re.sub("%" + regex, word, string, 1)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def cat(self, ctx):
+    async def cat(self):
         """Get a random cat picture from random.cat"""
-        url = 'https://random.cat/meow'
+        if random.randint(0, 1) == 1:
+            url = 'https://random.cat/meow'
 
-        async with aiohttp.get(url) as r:
-            if r.status == 200:
-                js = await r.json()
-                await self.bot.say(js['file'])
+            async with aiohttp.get(url) as r:
+                if r.status == 200:
+                    js = await r.json()
+                    await self.bot.say(js['file'])
+        else:
+            cats = ['https://i.imgur.com/MWQb0Ow.jpg', 'https://i.imgur.com/0sQxWhX.jpg',
+                    'https://i.imgur.com/jfnNyhN.jpg', 'https://i.imgur.com/PfjDURc.jpg',
+                    'https://i.imgur.com/f3D8RHJ.jpg', 'https://i.imgur.com/pYzC7en.jpg',
+                    'https://i.imgur.com/v7NNxjK.jpg', 'https://i.imgur.com/Wpj18Yi.jpg',
+                    'https://i.imgur.com/Dcyq3Fs.jpg']
+            url = random.choice(cats)
 
-    @commands.command(pass_context=True)
+            await self.bot.say(url)
+
+    @commands.command()
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def shitpost(self, ctx):
+    async def shitpost(self):
         """Have the bot shitpost in chat."""
         # Shitpost code from https://github.com/yrsegal/shitpost
         if not self.bases:
@@ -62,17 +72,17 @@ class Fun:
         self.words.reload()
         await self.bot.say(base)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def tts(self, ctx, message: str):
+    async def tts(self, message: str):
         """Have the bot join your channel and say what you said."""
         # Thanks to https://stackoverflow.com/questions/9893175/google-text-to-speech-api/31791632#31791632
         tts = gTTS(text=message, lang='en')
         tts.save('temp.mp3')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 60, commands.BucketType.user)
-    async def feedme(self, ctx):
+    async def feedme(self):
         """Feed your cat some spaghetti."""
         await self.bot.say('https://i.imgur.com/MWQb0Ow.jpg')
 

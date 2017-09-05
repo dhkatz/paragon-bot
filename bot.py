@@ -78,7 +78,7 @@ def initialize(bot_class=Bot):
                 try:
                     await bot.send_message(bot.owner, embed=embed)
                 except:
-                    pass
+                    raise
         elif isinstance(error, commands.CommandOnCooldown):
             embed = discord.Embed(title='Command Cooldown', colour=discord.Colour.dark_red(),
                                   description=f'You\'re on cooldown! Try again in {str(error)[34:]}.')
