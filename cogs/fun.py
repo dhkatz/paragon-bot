@@ -7,7 +7,6 @@ import re
 import aiohttp
 import discord
 from discord.ext import commands
-from gtts import gTTS
 
 
 class Fun:
@@ -18,7 +17,7 @@ class Fun:
         self.logger = logging.getLogger('discord')
         self.word_list, self.bases = {}, []
         self.words = Config(os.path.join(os.path.dirname(__file__), 'words.json'))
-        self.bot.scheduler.add_job(self.goodnight_jackson, 'cron', hour=23)
+        self.bot.scheduler.add_job(self.goodnight_jackson, 'cron', hour=23, minute=30)
 
     async def goodnight_jackson(self):
         self.logger.info('Saying goodnight to Jackson...')
