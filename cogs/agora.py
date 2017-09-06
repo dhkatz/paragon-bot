@@ -114,9 +114,9 @@ class Agora:
         embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
         embed.description = message
         embed.set_footer(text='Paragon', icon_url=self.icon_url)
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def elo(self, ctx):
         """Returns a player's elo by name from Agora.gg"""
 
@@ -128,15 +128,15 @@ class Agora:
         else:
             try:
                 # Player is stored in DB
-                player = Player.get(Player.discord_id == ctx.message.author.id)
+                player = Player.get(Player.discord_id == ctx.author.id)
                 user = player.player_name
             except peewee.DoesNotExist:
-                if isinstance(ctx.message.author, discord.Member):
+                if isinstance(ctx.author, discord.Member):
                     # Public channel message
-                    user = ctx.message.author.nick if ctx.message.author.nick is not None else ctx.message.author.name
+                    user = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
                 else:
                     # Private channel. We have to pull by name or DB
-                    user = ctx.message.author.name
+                    user = ctx.author.name
 
         user_id = self.get_agora_player_id(username=user)
         if user_id == 'null':
@@ -149,9 +149,9 @@ class Agora:
             return
         else:
             embed = self.get_agora_player_elo(user_id)
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def stats(self, ctx):
         """Returns a player's stats from Agora.gg"""
 
@@ -163,15 +163,15 @@ class Agora:
         else:
             try:
                 # Player is stored in DB
-                player = Player.get(Player.discord_id == ctx.message.author.id)
+                player = Player.get(Player.discord_id == ctx.author.id)
                 user = player.player_name
             except peewee.DoesNotExist:
-                if isinstance(ctx.message.author, discord.Member):
+                if isinstance(ctx.author, discord.Member):
                     # Public channel message
-                    user = ctx.message.author.nick if ctx.message.author.nick is not None else ctx.message.author.name
+                    user = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
                 else:
                     # Private channel. We have to pull by name or DB
-                    user = ctx.message.author.name
+                    user = ctx.author.name
 
         user_id = self.get_agora_player_id(username=user)
         if user_id == 'null':
@@ -185,9 +185,9 @@ class Agora:
         else:
             embed = self.get_agora_player_stats(user_id)
 
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def lpg(self, ctx):
         """Get a player's last played game stats from Agora.gg"""
 
@@ -199,15 +199,15 @@ class Agora:
         else:
             try:
                 # Player is stored in DB
-                player = Player.get(Player.discord_id == ctx.message.author.id)
+                player = Player.get(Player.discord_id == ctx.author.id)
                 user = player.player_name
             except peewee.DoesNotExist:
-                if isinstance(ctx.message.author, discord.Member):
+                if isinstance(ctx.author, discord.Member):
                     # Public channel message
-                    user = ctx.message.author.nick if ctx.message.author.nick is not None else ctx.message.author.name
+                    user = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
                 else:
                     # Private channel. We have to pull by name or DB
-                    user = ctx.message.author.name
+                    user = ctx.author.name
 
         user_id = self.get_agora_player_id(username=user)
         if user_id == 'null':
@@ -221,9 +221,9 @@ class Agora:
         else:
             embed = self.get_agora_player_latest_game_stats(user_id, 0)
 
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True, aliases=['deck', 'd'])
+    @commands.command(aliases=['deck', 'd'])
     async def herodeck(self, ctx):
         """Returns top three hero decks from Agora.gg"""
         message = str(ctx.message.content).replace(self.bot.command_prefix + ctx.invoked_with, '')
@@ -243,9 +243,9 @@ class Agora:
 
         for i in range(0, 3):
             embed = self.get_agora_hero_deck(hero_name=results.hero_name, image=results.icon, num=i)
-            await self.bot.say(embed=embed)
+            await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True, aliases=['guide', 'g'])
+    @commands.command(aliases=['guide', 'g'])
     async def heroguide(self, ctx):
         """Returns top three hero guides from Agora.gg"""
         message = str(ctx.message.content).replace(self.bot.command_prefix + ctx.invoked_with, '')
@@ -264,10 +264,10 @@ class Agora:
             return
 
         for i in range(0, 3):
-            embed = self.get_agora_hero_deck(hero_name=results.agora_hero_id, image=results.icon, num=i)
-            await self.bot.say(embed=embed)
+            embed = self.get_agora_hero_guide(hero_id=results.agora_data_name, image=results.icon, num=i)
+            await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def card(self, ctx, *args):
         """Returns information on a card or multiple cards. Surround a card name with quotes."""
         for search in args:
@@ -287,9 +287,9 @@ class Agora:
                     return
                 else:
                     embed = self.build_card(search)
-            await self.bot.say(embed=embed)
+            await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def gem(self, ctx, *args):
         """Returns information on a gem or multiple gems. Surround a gem name with quotes."""
         for search in args:
@@ -309,9 +309,9 @@ class Agora:
                     return
                 else:
                     embed = self.build_gem(search)
-            await self.bot.say(embed=embed)
+            await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def ign(self, ctx, epic_id: str = ''):
         """Tag your Paragon IGN to your Discord account. Surround names with spaces in quotes. Empty to see current."""
         embed = discord.Embed()
@@ -326,26 +326,26 @@ class Agora:
                 return
 
             try:
-                player = Player.get(Player.discord_id == ctx.message.author.id)
+                player = Player.get(Player.discord_id == ctx.author.id)
                 player.player_name = epic_id
                 player.save()
                 await self.embed_notify(ctx, 0, 'Epic ID Updated', 'You have updated your Epic ID!')
             except peewee.DoesNotExist:
-                player = Player(agora_player_id=player_id, discord_id=ctx.message.author.id, player_name=epic_id,
+                player = Player(agora_player_id=player_id, discord_id=ctx.author.id, player_name=epic_id,
                                 elo=player_elo, team_id=None)
                 player.save()
                 await self.embed_notify(ctx, 0, 'Epic ID Updated', 'You have attached your Epic ID to your Discord ID!')
         else:
             # User is requesting their current ID!
             try:
-                player = Player.get(Player.discord_id == ctx.message.author.id)
+                player = Player.get(Player.discord_id == ctx.author.id)
                 embed.title = 'Current Epic ID'
                 embed.colour = discord.Colour.blue()
                 embed.description = player.player_name
                 embed.url = 'https://agora.gg/profile/' + player.agora_player_id + '/' + quote(player.player_name,
                                                                                                safe='')
                 embed.set_footer(text='Paragon', icon_url=self.icon_url)
-                await self.bot.say(embed=embed)
+                await ctx.send(embed=embed)
             except peewee.DoesNotExist:
                 await self.embed_notify(ctx, 1, 'Error',
                                         'No player name specified and no Epic ID was found linked to your account!\n(See \'' + self.bot.command_prefix + 'help ign\' for more command information!)')
@@ -522,13 +522,13 @@ class Agora:
             with requests.get(url=url) as r:
                 if r.status_code == 200:
                     js = r.json()
-                    embed.title = js[num]['name']
-                    embed.url = 'https://agora.gg/guide/' + str(js[num]['id'])
+                    embed.title = js['data'][num]['name']
+                    embed.url = 'https://agora.gg/guide/' + str(js['data'][num]['id'])
                     embed.set_thumbnail(url=image)
-                    embed.add_field(name='Votes', value=js[num]['votes'])
-                    embed.add_field(name='Role', value=js[num]['role'])
-                    embed.add_field(name='Author', value=js[num]['playerName'] + ' (Elo: ' + str(
-                        round(js[num]['elo'], 2)) + ')')
+                    embed.add_field(name='Votes', value=js['data'][num]['votes'])
+                    embed.add_field(name='Role', value=js['data'][num]['role'])
+                    embed.add_field(name='Author', value=js['data'][num]['playerName'] + ' (Elo: ' + str(
+                        round(js['data'][num]['elo'], 2)) + ')')
                     embed.set_footer(text='Paragon', icon_url=self.icon_url)
         except Exception as e:
             self.bot.logger.exception(e)

@@ -18,12 +18,12 @@ class Fun:
         self.logger = logging.getLogger('discord')
         self.word_list, self.bases = {}, []
         self.words = Config(os.path.join(os.path.dirname(__file__), 'words.json'))
-        self.bot.scheduler.add_job(self.goodnight_jackson, 'cron', hour=22, minute=30)
+        self.bot.scheduler.add_job(self.goodnight_jackson, 'cron', hour=23)
 
     async def goodnight_jackson(self):
         self.logger.info('Saying goodnight to Jackson...')
-        channel = discord.utils.find(lambda c: c.id == '222462913724547072', self.bot.get_all_channels())
-        await self.bot.send_message(channel, 'Goodnight Jackson')
+        channel = discord.utils.find(lambda c: c.id == 222462913724547072, self.bot.get_all_channels())
+        await channel.send('Goodnight Jackson')
 
     def shitpost_sub(self, string, regex):
         if regex not in self.word_list or not self.word_list[regex]:
@@ -33,15 +33,15 @@ class Fun:
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def cat(self):
+    async def cat(self, ctx):
         """Get a random cat picture from random.cat"""
         if random.randint(0, 1) == 1:
             url = 'https://random.cat/meow'
-
-            async with aiohttp.get(url) as r:
-                if r.status == 200:
-                    js = await r.json()
-                    await self.bot.say(js['file'])
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    if r.status == 200:
+                        js = await r.json()
+                        await ctx.send(js['file'])
         else:
             cats = ['https://i.imgur.com/MWQb0Ow.jpg', 'https://i.imgur.com/0sQxWhX.jpg',
                     'https://i.imgur.com/jfnNyhN.jpg', 'https://i.imgur.com/PfjDURc.jpg',
@@ -50,11 +50,11 @@ class Fun:
                     'https://i.imgur.com/Dcyq3Fs.jpg']
             url = random.choice(cats)
 
-            await self.bot.say(url)
+            await ctx.send(url)
 
     @commands.command()
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def shitpost(self):
+    async def shitpost(self, ctx):
         """Have the bot shitpost in chat."""
         # Shitpost code from https://github.com/yrsegal/shitpost
         if not self.bases:
@@ -70,21 +70,13 @@ class Fun:
         if self.bot.dev:
             self.logger.info(base)
         self.words.reload()
-        await self.bot.say(base)
-
-    @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.user)
-    async def tts(self, message: str):
-        """Have the bot join your channel and say what you said."""
-        # Thanks to https://stackoverflow.com/questions/9893175/google-text-to-speech-api/31791632#31791632
-        tts = gTTS(text=message, lang='en')
-        tts.save('temp.mp3')
+        await ctx.send(base)
 
     @commands.command()
     @commands.cooldown(3, 60, commands.BucketType.user)
-    async def feedme(self):
+    async def feedme(self, ctx):
         """Feed your cat some spaghetti."""
-        await self.bot.say('https://i.imgur.com/MWQb0Ow.jpg')
+        await ctx.send('https://i.imgur.com/MWQb0Ow.jpg')
 
 
 class Config:

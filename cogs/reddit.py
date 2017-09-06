@@ -14,7 +14,7 @@ class Reddit:
         self.reddit = None
         self.subreddit = None
 
-    async def on_ready(self):
+    async def login(self):
         # self.reddit = praw.Reddit(user_agent=self.user_agent, client_id=config.__reddit__['client_id'],
         #                           client_secret=config.__reddit__['client_secret'],
         #                           username=config.__reddit__['username'],
@@ -24,14 +24,14 @@ class Reddit:
         # self.bot.logger.info('Logged into Reddit as ' + str(self.reddit.user.me()))
         self.bot.logger.info('Test event.')
 
-    @commands.group(pass_context=True, name='reddit')
+    @commands.group(name='reddit')
     async def reddit(self, ctx):
         """Useful Reddit commands."""
         if ctx.invoked_subcommand is None:
-            await self.bot.say('Reddit functionality is still a WIP!')
+            await ctx.send('Reddit functionality is still a WIP!')
 
-    @reddit.command(name='stickied', pass_context=True)
-    async def reddit_stickied(self):
+    @reddit.command(name='stickied')
+    async def reddit_stickied(self, ctx):
         """Get the current stickied posts from /r/Paragon!"""
         for i in range(1, 3):
             try:
@@ -42,11 +42,11 @@ class Reddit:
             embed = discord.Embed()
             embed.title = sticky.title
             embed.url = sticky.shortlink
-            await self.bot.say(embed=embed)
+            await ctx.send(embed=embed)
             print(vars(sticky))
 
 
 def setup(bot):
     n = Reddit(bot)
-    bot.add_listener(n.on_ready)
+    bot.add_listener(n.login, 'on_ready')
     bot.add_cog(n)

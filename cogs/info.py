@@ -14,13 +14,13 @@ class Info:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def info(self, ctx):
         """General bot information. See .help info for subcommands."""
         if ctx.invoked_subcommand is None:
-            await self.bot.say('No subcommand passed!')
+            await ctx.send('No subcommand passed!')
 
-    @info.command(name='avatar', pass_context=True)
+    @info.command(name='avatar')
     async def _avatar(self, ctx):
         """Returns information about the bot's avatar."""
         embed = discord.Embed()
@@ -30,17 +30,17 @@ class Info:
         embed.set_thumbnail(
             url='https://i.imgur.com/HI8kV9c.png')
         embed.add_field(name='Artist', value='SaiDrawing', inline=False)
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @info.command(name='name', pass_context=True, hidden=True)
+    @info.command(name='name', hidden=True)
     @checks.is_owner()
     async def _name(self, ctx, name: str):
         """Change the bot's username. OWNER ONLY."""
         await self.bot.edit_profile(username=name)
         embed = discord.Embed(title='Success', description='Changed my name to ' + name, colour=discord.Colour.green())
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @info.command(name='status', pass_context=True, aliases=['uptime', 'up'])
+    @info.command(name='status', aliases=['uptime', 'up'])
     async def _status(self, ctx: commands.Context):
         """Information about the bot's status."""
         uptime = time.time() - self.bot.uptime
@@ -57,10 +57,10 @@ class Info:
         except IndexError:
             command_info = str(sum(self.bot.counter.values()))
 
-        bot_member = ctx.message.server.get_member(self.bot.user.id)
-        for server in self.bot.servers:
-            users += len(server.members)
-            channel += len(server.channels)
+        bot_member = ctx.message.guild.get_member(self.bot.user.id)
+        for guild in self.bot.guilds:
+            users += len(guild.members)
+            channel += len(guild.channels)
         embed = discord.Embed(colour=bot_member.top_role.colour)
         embed.add_field(name='Bot Creator', value=self.bot.owner.name, inline=False)
         embed.add_field(name='Uptime',
@@ -68,7 +68,7 @@ class Info:
                         inline=False)
         embed.add_field(name='Total Users', value=users)
         embed.add_field(name='Total Channels', value=channel)
-        embed.add_field(name='Total Servers', value=str(len(self.bot.servers)))
+        embed.add_field(name='Total Servers', value=str(len(self.bot.guilds)))
         embed.add_field(name='Command Usage', value=command_info)
         embed.add_field(name='Bot Version', value=self.bot.version)
         embed.add_field(name='Discord.py Version', value=discord.__version__)
@@ -77,7 +77,7 @@ class Info:
         embed.add_field(name='Operating System',
                         value='{} {} {}'.format(platform.system(), platform.release(), platform.version()),
                         inline=False)
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

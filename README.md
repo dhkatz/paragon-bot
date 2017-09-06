@@ -93,4 +93,4 @@ Requirements
 Please see the specific requirements listed for each of the packages listed below.
 
 * Python 3.6+
-* discord.py
+* discord.py[voice] 1.0.0a0+ (Rewrite)

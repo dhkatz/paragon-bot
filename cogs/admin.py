@@ -21,25 +21,25 @@ class Admin():
         embed.title = title
         embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
         embed.description = message
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True, aliases=['quit'], hidden=True)
+    @commands.command(aliases=['quit'], hidden=True)
     @checks.is_owner()
     async def shutdown(self, ctx):
         """Shutdown the bot. (Bot owner only)"""
-        await self.bot.say('**:ok:** Goodbye!')
+        await ctx.send('**:ok:** Goodbye!')
         self.bot.logout()
         sys.exit(0)
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     @checks.is_owner()
     async def restart(self, ctx):
         """Restart the bot program. (Bot owner only)"""
-        await self.bot.say('**:ok:** Be back soon!')
+        await ctx.send('**:ok:** Be back soon!')
         self.bot.logout()
         sys.exit(6)
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     @checks.is_owner()
     async def avatar(self, ctx, url: str):
         """Set the bot's avatar image. (Bot owner only)"""
@@ -48,13 +48,13 @@ class Admin():
             with open(temp_avatar, 'wb') as f:
                 f.write(await img.read())
         with open(temp_avatar, 'rb') as f:
-            await self.bot.edit_profile(avatar=f.read())
+            await self.bot.user.edit(avatar=f.read())
         os.remove(temp_avatar)
         await asyncio.sleep(2)
         embed = discord.Embed(title='Success', description='Changed my avatar!', colour=discord.Colour.green())
-        await self.bot.say(embed=embed)
+        await ctx.send(embed=embed)
 
-    @commands.group(pass_context=True, hidden=True)
+    @commands.group(hidden=True)
     @checks.is_owner()
     async def blacklist(self, ctx, edit: str):
         """Blacklist users from using commands."""

@@ -103,4 +103,5 @@ ENV/
 *.log.*
 *.mp3
 *.json
+*.webm
 config.py

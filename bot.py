@@ -32,6 +32,9 @@ class Bot(commands.Bot):
         self.scheduler = AsyncIOScheduler(timezone=timezone('US/Pacific'))
         self.scheduler.start()
         self.db = BOT_DB
+        self.dev = True
+        self.owner = None
+        self.clever = CleverWrap(config.__cleverbot__)
         super().__init__(*args, command_prefix=config.__prefix__, **kwargs)
 
 
@@ -40,7 +43,7 @@ def initialize(bot_class=Bot):
 
     @bot.event
     async def on_ready():
-        if bot.user.id == '308032552243822602':
+        if bot.user.id == 308032552243822602:
             bot.dev = True
         else:
             bot.dev = False
@@ -52,54 +55,52 @@ def initialize(bot_class=Bot):
                 bot.logger.error(f'Unable to load cog {cog}')
                 bot.logger.error(cog_error)
         bot.version = __version__
-        bot.start_time = time.time()
         bot.commands_used = Counter()
-        bot.owner = discord.utils.find(lambda u: u.id == config.__ownerid__, bot.get_all_members())
-        bot.clever = CleverWrap(config.__cleverbot__)
+        bot.owner = bot.get_user(bot.owner_id)
         await bot.change_presence(game=BOT_STATUS)
 
     @bot.event
-    async def on_command_error(error, ctx):
+    async def on_command_error(ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
-            await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
+            # await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
+            await ctx.message.channel('This command cannot be used in private messages.')
         elif isinstance(error, commands.DisabledCommand):
-            await bot.say(':x: This command has been disabled.')
+            await ctx.message.send(':x: This command has been disabled.')
         elif isinstance(error, commands.CommandInvokeError):
             if bot.dev:
                 raise error
             else:
                 embed = discord.Embed(title=':x: Command Error', colour=0x992d22)  # Dark Red
                 embed.add_field(name='Error', value=str(error))
-                embed.add_field(name='Server', value=ctx.message.server)
+                embed.add_field(name='Server', value=ctx.message.guild)
                 embed.add_field(name='Channel', value=ctx.message.channel)
                 embed.add_field(name='User', value=ctx.message.author)
                 embed.add_field(name='Message', value=ctx.message.clean_content)
                 embed.timestamp = datetime.datetime.utcnow()
                 try:
-                    await bot.send_message(bot.owner, embed=embed)
+                    await bot.owner.send(embed=embed)
                 except:
                     raise
         elif isinstance(error, commands.CommandOnCooldown):
             embed = discord.Embed(title='Command Cooldown', colour=discord.Colour.dark_red(),
                                   description=f'You\'re on cooldown! Try again in {str(error)[34:]}.')
-            await bot.send_message(ctx.message.channel, embed=embed)
+            await ctx.message.channel.send(embed=embed)
 
     @bot.event
-    async def on_command(command, ctx):
-        bot.counter[command.name] += 1
-        msg = ctx.message
-        if msg.channel.is_private:
+    async def on_command(ctx):
+        bot.counter[ctx.command.name] += 1
+        if isinstance(ctx.channel, discord.abc.PrivateChannel):
             destination = 'Private Message'
         else:
-            destination = f'#{msg.channel.name} ({msg.server.name})'
-        bot.logger.info(f'{msg.author.name} in {destination}: {msg.content}')
+            destination = f'#{ctx.channel.name} ({ctx.guild.name})'
+        bot.logger.info(f'{ctx.author.name} in {destination}: {ctx.message.content}')
 
     @bot.event
     async def on_message(message: discord.Message):
         if message.author.bot or message.author.id in config.__blacklist__:
             return
         if bot.user.mentioned_in(message) and not message.mention_everyone:
-            await bot.send_message(message.channel, bot.clever.say(message.clean_content))
+            await message.channel.send(bot.clever.say(message.clean_content))
         await bot.process_commands(message)
 
     return bot
