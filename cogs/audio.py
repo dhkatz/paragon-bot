@@ -867,7 +867,7 @@ class Audio:
             server = self.bot.get_server(sid)
             try:
                 vc = self.voice_client(server)
-                if vc.audio_player.is_playing():
+                if vc.audio_player.is_playing:
                     count += 1
             except:
                 pass
@@ -1308,7 +1308,7 @@ class Audio:
 
         if not hasattr(voice_client, 'audio_player'):
             await self.bot.say("Nothing playing, nothing to pause.")
-        elif voice_client.audio_player.is_playing():
+        elif voice_client.audio_player.is_playing:
             voice_client.audio_player.pause()
             await self.bot.say("Paused.")
         else:
@@ -1740,7 +1740,7 @@ class Audio:
         if not hasattr(voice_client, 'audio_player'):
             await self.bot.say("Nothing paused, nothing to resume.")
         elif not voice_client.audio_player.is_done() and \
-                not voice_client.audio_player.is_playing():
+                not voice_client.audio_player.is_playing:
             voice_client.audio_player.resume()
             await self.bot.say("Resuming.")
         else:
@@ -2137,11 +2137,11 @@ class Audio:
 
         if before.mute != after.mute:
             vc = self.voice_client(server)
-            if after.mute and vc.audio_player.is_playing():
+            if after.mute and vc.audio_player.is_playing:
                 log.debug("Just got muted, pausing")
                 vc.audio_player.pause()
             elif not after.mute and \
-                    (not vc.audio_player.is_playing() and
+                    (not vc.audio_player.is_playing and
                          not vc.audio_player.is_done()):
                 log.debug("just got unmuted, resuming")
                 vc.audio_player.resume()

@@ -32,7 +32,7 @@ ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
+    def __init__(self, source, *, data, volume=1):
         super().__init__(source, volume)
 
         self.data = data
@@ -56,6 +56,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
 class Music:
     def __init__(self, bot):
         self.bot = bot
+        self.voice_states = {}
+
+    def get_voice_state(self, guild: discord.Guild):
+        state = self.voice_states.get(guild.id)
+        if state is None:
+            state = VoiceState(self.bot)
+            self.voice_states[guild.id] = state
+
+        return state
 
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel):
@@ -104,8 +113,17 @@ class Music:
         await ctx.send('Now playing: {}'.format(query))
 
     @commands.command()
-    async def play(self, ctx, *, url):
+    async def play(self, ctx, *, url: str = ''):
         """Streams from a url (almost anything youtube_dl supports)"""
+
+        if len(url) == 0:
+            await ctx.channel.send('No song specified!')
+            return
+
+        state = self.get_voice_state(ctx.guild)
+
+        if state.voice is None:
+            success = await ctx.invoke(self.join)
 
         if ctx.voice_client is None:
             if ctx.author.voice.channel:
@@ -136,6 +154,54 @@ class Music:
         """Stops and disconnects the bot from voice"""
 
         await ctx.voice_client.disconnect()
+
+
+class VoiceEntry:
+    def __init__(self, message, source):
+        self.requester = message.author
+        self.channel = message.channel
+        self.source = source
+
+    def __str__(self):
+        fmt = '**{0.title}**'
+        duration = self.source.duration
+        if duration:
+            fmt = fmt + ' [{0[0]}m {0[1]}s]'.format(divmod(duration, 60))
+        return fmt.format(self.source, self.requester)
+
+
+class VoiceState:
+    def __init__(self, bot):
+        self.bot = bot
+        self.voice = None
+        self.current = None
+        self.play_next_song = asyncio.Event()
+        self.songs = asyncio.Queue()
+        self.skips = set()
+        self.audio_player = self.bot.loop.create_task(self.audio_player_task())
+
+    @property
+    def is_playing(self):
+        if self.voice is None or self.current is None:
+            return False
+
+        return self.voice.is_playing
+
+    async def skip(self):
+        self.skips.clear()
+        await self.bot.send(self.voice.channel, 'Skipped ' + str(self.current))
+        if self.is_playing:
+            self.voice.stop()
+
+    def toggle_next(self):
+        self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
+
+    async def audio_player_task(self):
+        while True:
+            self.play_next_song.clear()
+            self.current = await self.songs.get()
+            await self.bot.send(self.voice.channel, 'Now Playing ' + str(self.current))
+            self.voice.play(self.current.source, after=lambda e: print('Player error: %s' % e) if e else None)
 
 
 def setup(bot):
