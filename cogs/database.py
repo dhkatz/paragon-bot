@@ -41,7 +41,7 @@ class Database:
                 guild = Server(server_id=guild.id, server_name=guild.name, use_music_role=True,
                                music_role_id=music_role.id)
                 guild.save()
-                self.bot.logger.info('Added server ' + guild.server_name + ' to database!')
+                self.bot.logger.info('Added server ' + guild.name + ' to database!')
                 return
 
         music_permissions = guild.default_role
@@ -52,12 +52,12 @@ class Database:
                                                 colour=discord.Color(11815924), mentionable=False)
         guild = Server(server_id=guild.id, server_name=guild.name, use_music_role=True, music_role_id=music_role.id)
         guild.save()
-        self.bot.logger.info('Added server ' + guild.server_name + ' to database!')
+        self.bot.logger.info('Added server ' + guild.name + ' to database!')
 
     async def remove_server(self, guild: discord.Guild):
         self.bot.logger.info('Removing ' + guild.name + ' from database...')
         try:
-            server_left = Server.get(Server.server_id == guild.id)
+            server_left = Server.get(Server.real_id == guild.id)
             server_left.delete_instance()
         except DoesNotExist:
             self.bot.logger.error('Somehow a server we left did not exist in the database!')
@@ -69,19 +69,18 @@ class BaseModel(Model):
 
 
 class Server(BaseModel):
-    server_id = CharField(unique=True)
-    server_name = CharField()
-    use_music_role = BooleanField(default=True)
-    music_role_id = CharField(null=True)
+    guild_id = CharField(unique=True)
+    guild_name = CharField()  # Technically don't need to store this but helps with readability...
 
 
 class Player(BaseModel):
-    agora_player_id = CharField(unique=True)
+    agora_player_id = CharField(unique=True, default='')
     discord_id = CharField(unique=True)
-    player_name = CharField()
+    player_name = CharField(default='')
     elo = FloatField(default=0)
     tournaments = TextField(null=True)  # Player can be in multiple tournaments
     teams = TextField(null=True)  # Player could be on multiple teams from different tournaments
+    blacklist = BooleanField(default=False)
 
 
 def setup(bot):

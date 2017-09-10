@@ -55,13 +55,6 @@ def is_admin():
     return commands.check(predicate)
 
 
-def is_owner():
-    def predicate(ctx):
-        return ctx.message.author.id == config.__ownerid__
-
-    return commands.check(predicate)
-
-
 def mod_or_permissions(**perms):
     perms['manage_guild'] = True
 
@@ -91,15 +84,15 @@ def is_in_guilds(*guild_ids):
 
 
 def music_role(ctx):
-    owner = ctx.message.author.id == ctx.message.server.owner.id
+    owner = ctx.author.id == ctx.guild.owner.id
     if owner:
         return True
 
-    server = Server.get(Server.server_id == ctx.message.server.id)
+    server = Server.get(Server.real_id == ctx.guild.id)
     if server.use_music_role == 0:
         return True
 
-    for role in ctx.message.author.roles:
+    for role in ctx.author.roles:
         if role.id == server.music_role_id:
             return True
 

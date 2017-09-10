@@ -9,6 +9,7 @@ import requests
 from discord.ext import commands
 
 from cogs.database import *
+from .util.paginator import Pages
 
 
 class Agora:
@@ -17,7 +18,7 @@ class Agora:
     def __init__(self, bot):
         self.bot = bot
         self.hero_file = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon-Discord-Bot/Database')
-        self.icon_url = 'https://vignette2.wikia.nocookie.net/paragonthegame/images/f/f4/Paragon-logo.png'
+        self.icon_url = 'https://e-stats.io/src/images/games/paragon/logo-white-icon.png'
         self.heroes = configparser.ConfigParser()
         self.heroes.read(self.hero_file)
 
@@ -107,15 +108,6 @@ class Agora:
         hero = Hero.select().where(Hero.roles.contains(role)).order_by(fn.Random()).get()
         return hero
 
-    async def embed_notify(self, ctx: commands.Context, error: int, title: str, message: str):
-        """Create and reply Discord embeds in one line."""
-        embed = discord.Embed()
-        embed.title = title
-        embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
-        embed.description = message
-        embed.set_footer(text='Paragon', icon_url=self.icon_url)
-        await ctx.send(embed=embed)
-
     @commands.command()
     async def elo(self, ctx):
         """Returns a player's elo by name from Agora.gg"""
@@ -141,11 +133,11 @@ class Agora:
         user_id = self.get_agora_player_id(username=user)
         if user_id == 'null':
             if len(message) > 1:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'The user you entered does not exist, please re-check the name!')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'The user you entered does not exist, please re-check the name!')
             else:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .elo <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .elo <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
             return
         else:
             embed = self.get_agora_player_elo(user_id)
@@ -176,11 +168,11 @@ class Agora:
         user_id = self.get_agora_player_id(username=user)
         if user_id == 'null':
             if len(message) > 1:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'The user you entered does not seem exist, please re-check the name!')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'The user you entered does not seem exist, please re-check the name!')
             else:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .stats <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .stats <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
             return
         else:
             embed = self.get_agora_player_stats(user_id)
@@ -212,11 +204,11 @@ class Agora:
         user_id = self.get_agora_player_id(username=user)
         if user_id == 'null':
             if len(message) > 1:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'The user you entered does not seem exist, please re-check the name!')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'The user you entered does not seem exist, please re-check the name!')
             else:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .lpg <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'Your discord account does not seem to be the same as your Paragon username, please find your IGN and use the command .lpg <PlayerName>. Alternatively, tag your Epic ID to your Discord account by typing .ign <PlayerName>')
             return
         else:
             embed = self.get_agora_player_latest_game_stats(user_id, 0)
@@ -231,14 +223,14 @@ class Agora:
         if len(message) > 1:
             hero = message.replace(' ', '', 1)
         else:
-            await self.embed_notify(ctx, 1, 'Error', 'You must specify a hero with this command!')
+            await self.bot.embed_notify(ctx, 1, 'Error', 'You must specify a hero with this command!')
             return
 
         try:
             results = Hero.select().where(Hero.hero_name.contains(hero)).get()
         except peewee.DoesNotExist:
-            await self.embed_notify(ctx, 1, 'Error',
-                                    'Hero does not exist, if the hero is new be patient and try again in a few days!')
+            await self.bot.embed_notify(ctx, 1, 'Error',
+                                        'Hero does not exist, if the hero is new be patient and try again in a few days!')
             return
 
         for i in range(0, 3):
@@ -253,14 +245,14 @@ class Agora:
         if len(message) > 1:
             hero = message.replace(' ', '', 1)
         else:
-            await self.embed_notify(ctx, 1, 'Error', 'You must specify a hero with this command!')
+            await self.bot.embed_notify(ctx, 1, 'Error', 'You must specify a hero with this command!')
             return
 
         try:
             results = Hero.select().where(Hero.hero_name.contains(hero)).get()
         except peewee.DoesNotExist:
-            await self.embed_notify(ctx, 1, 'Error',
-                                    'Hero does not exist, if the hero is new be patient and try again in a few days!')
+            await self.bot.embed_notify(ctx, 1, 'Error',
+                                        'Hero does not exist, if the hero is new be patient and try again in a few days!')
             return
 
         for i in range(0, 3):
@@ -280,14 +272,25 @@ class Agora:
                     description = ''
                     for result in results:
                         description += '[' + result.card_name + '](https://agora.gg/card/' + result.card_id + ')\n'
-                    await self.embed_notify(ctx, 2, 'Multiple Cards Found', description)
+                    await self.bot.embed_notify(ctx, 2, 'Multiple Cards Found', description)
                     return
                 elif results.count() == 0:
-                    await self.embed_notify(ctx, 1, 'Error', 'The card you are searching for does not exist!')
+                    await self.bot.embed_notify(ctx, 1, 'Error', 'The card you are searching for does not exist!')
                     return
                 else:
                     embed = self.build_card(search)
             await ctx.send(embed=embed)
+
+    @commands.command()
+    async def cards(self, ctx):
+        """Lists all cards in Paragon."""
+        try:
+            rows = Card.select()
+            p = Pages(ctx, entries=tuple(card.card_name for card in rows))
+            p.embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            await p.paginate()
+        except Exception as e:
+            await ctx.send(e)
 
     @commands.command()
     async def gem(self, ctx, *args):
@@ -302,10 +305,10 @@ class Agora:
                     description = ''
                     for result in results:
                         description += result.gem_name + '\n'
-                    await self.embed_notify(ctx, 2, 'Multiple Gems Found', description)
+                    await self.bot.embed_notify(ctx, 2, 'Multiple Gems Found', description)
                     return
                 elif results.count() == 0:
-                    await self.embed_notify(ctx, 1, 'Error', 'The gem you are searching for does not exist!')
+                    await self.bot.embed_notify(ctx, 1, 'Error', 'The gem you are searching for does not exist!')
                     return
                 else:
                     embed = self.build_gem(search)
@@ -321,20 +324,21 @@ class Agora:
             if player_id != 'null':
                 player_elo = self.get_raw_elo(player_id)
             else:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'The Epic ID you entered does not exist! Remember names with spaces need quotes!')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'The Epic ID you entered does not exist! Remember names with spaces need quotes!')
                 return
 
             try:
                 player = Player.get(Player.discord_id == ctx.author.id)
                 player.player_name = epic_id
                 player.save()
-                await self.embed_notify(ctx, 0, 'Epic ID Updated', 'You have updated your Epic ID!')
+                await self.bot.embed_notify(ctx, 0, 'Epic ID Updated', 'You have updated your Epic ID!')
             except peewee.DoesNotExist:
                 player = Player(agora_player_id=player_id, discord_id=ctx.author.id, player_name=epic_id,
                                 elo=player_elo, team_id=None)
                 player.save()
-                await self.embed_notify(ctx, 0, 'Epic ID Updated', 'You have attached your Epic ID to your Discord ID!')
+                await self.bot.embed_notify(ctx, 0, 'Epic ID Updated',
+                                            'You have attached your Epic ID to your Discord ID!')
         else:
             # User is requesting their current ID!
             try:
@@ -347,8 +351,8 @@ class Agora:
                 embed.set_footer(text='Paragon', icon_url=self.icon_url)
                 await ctx.send(embed=embed)
             except peewee.DoesNotExist:
-                await self.embed_notify(ctx, 1, 'Error',
-                                        'No player name specified and no Epic ID was found linked to your account!\n(See \'' + self.bot.command_prefix + 'help ign\' for more command information!)')
+                await self.bot.embed_notify(ctx, 1, 'Error',
+                                            'No player name specified and no Epic ID was found linked to your account!\n(See \'' + self.bot.command_prefix + 'help ign\' for more command information!)')
 
     def get_agora_player_id(self, username):
         url = 'https://api.agora.gg/v1/players/search?name=' + username

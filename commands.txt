@@ -6,26 +6,26 @@ Tournament
 |- Info 	/ Information on a tournament
 |- Confirm	/ Confirm creation of tournament (Role and Staff only)
 |- Setup 	/ Setup teams and matches (Time until first match)
-|- Team
-	|- Create	/ Manual team creation (Staff only)
-	|- Delete	/ Manual team deletion (Staff only)
-	|- Add 		/ Manual player addion (Staff only)
-	|- Remove	/ Manual player removal
-	|- Name 	/ Change a team's name (Must be staff or captain)
-	|- Join		/ Join a team
-	|- Leave	/ Leave a team
-	|- Info 	/ Information on a team
-|- Player
-	|- Create	/ Manual player add to tournament
-	|- Delete   / Manual player delete from tournament
-	|- Info     / Statistics about currently registered players
-|- Match
-	|- Create 	/ Create a match
-	|- Delete 	/ Delete a match
-	|- Info 	/ Information about an upcoming / ongoing match
-	|- Restart  / Restart the match, reset the bot tracking
-	|- Start	/ Set the match as started, needed for bot to track game
-	|- Result	/ Manually set the result of a match
-	|- Draft	/ Draft for both teams, if ARAM randomly picked
-	|- Pick 	/ Pick a hero, not available if ARAM
-	|- Ban 		/ Ban a hero
+Team
+|- Create	/ Manual team creation (Staff only)
+|- Delete	/ Manual team deletion (Staff only)
+|- Add 		/ Manual player addion (Staff only)
+|- Remove	/ Manual player removal
+|- Name 	/ Change a team's name (Must be staff or captain)
+|- Join		/ Join a team
+|- Leave	/ Leave a team
+|- Info 	/ Information on a team
+Player
+|- Create	/ Manual player add to tournament
+|- Delete   / Manual player delete from tournament
+|- Info     / Statistics about currently registered players
+Match
+|- Create 	/ Create a match
+|- Delete 	/ Delete a match
+|- Info 	/ Information about an upcoming / ongoing match
+|- Restart  / Restart the match, reset the bot tracking
+|- Start	/ Set the match as started, needed for bot to track game
+|- Result	/ Manually set the result of a match
+|- Draft	/ Draft for both teams, if ARAM randomly picked
+|- Pick 	/ Pick a hero, not available if ARAM
+|- Ban 		/ Ban a hero

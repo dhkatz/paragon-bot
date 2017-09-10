@@ -32,14 +32,6 @@ class Info:
         embed.add_field(name='Artist', value='SaiDrawing', inline=False)
         await ctx.send(embed=embed)
 
-    @info.command(name='name', hidden=True)
-    @checks.is_owner()
-    async def _name(self, ctx, name: str):
-        """Change the bot's username. OWNER ONLY."""
-        await self.bot.edit_profile(username=name)
-        embed = discord.Embed(title='Success', description='Changed my name to ' + name, colour=discord.Colour.green())
-        await ctx.send(embed=embed)
-
     @info.command(name='status', aliases=['uptime', 'up'])
     async def _status(self, ctx: commands.Context):
         """Information about the bot's status."""

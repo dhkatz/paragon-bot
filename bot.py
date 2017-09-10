@@ -15,8 +15,9 @@ from peewee import *
 from pytz import timezone
 
 import data.config.load as config
+from cogs.database import *
 
-__version__ = '0.25.1'
+__version__ = '0.31.1'
 
 BOT_DESCRIPTION = '''A Discord bot built for Paragon servers.'''
 BOT_STATUS = discord.Game(name='Paragon (Say ' + config.__prefix__ + 'help)')
@@ -33,9 +34,18 @@ class Bot(commands.Bot):
         self.scheduler.start()
         self.db = BOT_DB
         self.dev = True
-        self.owner = None
+        self.icon_url = 'https://e-stats.io/src/images/games/paragon/logo-white-icon.png'
         self.clever = CleverWrap(config.__cleverbot__)
         super().__init__(*args, command_prefix=config.__prefix__, **kwargs)
+
+    async def embed_notify(self, ctx: commands.Context, error: int, title: str, message: str):
+        """Create and reply Discord embeds in one line."""
+        embed = discord.Embed()
+        embed.title = title
+        embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
+        embed.description = message
+        embed.set_footer(text='Paragon', icon_url=self.icon_url)
+        await ctx.send(embed=embed)
 
 
 def initialize(bot_class=Bot):
@@ -56,14 +66,12 @@ def initialize(bot_class=Bot):
                 bot.logger.error(cog_error)
         bot.version = __version__
         bot.commands_used = Counter()
-        bot.owner = bot.get_user(bot.owner_id)
         await bot.change_presence(game=BOT_STATUS)
 
     @bot.event
     async def on_command_error(ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
-            # await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
-            await ctx.message.channel('This command cannot be used in private messages.')
+            await bot.embed_notify(ctx, 1, 'Error', 'This command cannot be used in private messages.')
         elif isinstance(error, commands.DisabledCommand):
             await ctx.message.send(':x: This command has been disabled.')
         elif isinstance(error, commands.CommandInvokeError):
@@ -82,9 +90,11 @@ def initialize(bot_class=Bot):
                 except:
                     raise
         elif isinstance(error, commands.CommandOnCooldown):
-            embed = discord.Embed(title='Command Cooldown', colour=discord.Colour.dark_red(),
-                                  description=f'You\'re on cooldown! Try again in {str(error)[34:]}.')
-            await ctx.message.channel.send(embed=embed)
+            await bot.embed_notify(ctx, 1, 'Command Cooldown', f'You\'re on cooldown! Try again in {str(error)[34:]}.')
+        elif isinstance(error, commands.CheckFailure):
+            await bot.embed_notify(ctx, 1, 'Command Error', 'You do not have permission to use this command!')
+        else:
+            raise error
 
     @bot.event
     async def on_command(ctx):
@@ -97,7 +107,11 @@ def initialize(bot_class=Bot):
 
     @bot.event
     async def on_message(message: discord.Message):
-        if message.author.bot or message.author.id in config.__blacklist__:
+        if Player.select().where(
+                        (Player.discord_id == str(message.author.id)) & (Player.blacklist == True)).count() != 0:
+            ctx = await bot.get_context(message)
+            if ctx.valid:
+                await bot.embed_notify(ctx, 1, 'Error', 'You are blacklisted from commands!')
             return
         if bot.user.mentioned_in(message) and not message.mention_everyone:
             await message.channel.send(bot.clever.say(message.clean_content))
