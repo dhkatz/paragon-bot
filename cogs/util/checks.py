@@ -21,14 +21,14 @@ def has_permissions(*, check=all, **perms):
 
 
 def check_guild_permissions(ctx: commands.Context, perms, *, check=all):
-    owner = ctx.message.author.id == config.__ownerid__
+    owner = ctx.author.id == config.__ownerid__
     if owner:
         return True
 
-    if ctx.message.server is None:
+    if ctx.guild is None:
         return False
 
-    resolved = ctx.message.author.guild_permissions
+    resolved = ctx.author.guild_permissions
     return check(getattr(resolved, name, None) == value for name, value in perms.items())
 
 
@@ -79,28 +79,5 @@ def is_in_guilds(*guild_ids):
         if guild is None:
             return False
         return guild.id in guild_ids
-
-    return commands.check(predicate)
-
-
-def music_role(ctx):
-    owner = ctx.author.id == ctx.guild.owner.id
-    if owner:
-        return True
-
-    server = Server.get(Server.real_id == ctx.guild.id)
-    if server.use_music_role == 0:
-        return True
-
-    for role in ctx.author.roles:
-        if role.id == server.music_role_id:
-            return True
-
-    return False
-
-
-def is_music():
-    def predicate(ctx):
-        return music_role(ctx)
 
     return commands.check(predicate)

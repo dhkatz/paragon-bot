@@ -73,16 +73,16 @@ def initialize(bot_class=Bot):
         if isinstance(error, commands.NoPrivateMessage):
             await bot.embed_notify(ctx, 1, 'Error', 'This command cannot be used in private messages.')
         elif isinstance(error, commands.DisabledCommand):
-            await ctx.message.send(':x: This command has been disabled.')
+            await ctx.send(':x: This command has been disabled.')
         elif isinstance(error, commands.CommandInvokeError):
             if bot.dev:
                 raise error
             else:
                 embed = discord.Embed(title=':x: Command Error', colour=0x992d22)  # Dark Red
                 embed.add_field(name='Error', value=str(error))
-                embed.add_field(name='Server', value=ctx.message.guild)
-                embed.add_field(name='Channel', value=ctx.message.channel)
-                embed.add_field(name='User', value=ctx.message.author)
+                embed.add_field(name='Server', value=ctx.guild)
+                embed.add_field(name='Channel', value=ctx.channel)
+                embed.add_field(name='User', value=ctx.author.name)
                 embed.add_field(name='Message', value=ctx.message.clean_content)
                 embed.timestamp = datetime.datetime.utcnow()
                 try:

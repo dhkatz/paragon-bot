@@ -69,11 +69,11 @@ class Tournament:
             tournament_time = datetime.strptime(date, '%m-%d-%Y %H:%M')
             if tournament_time > datetime.now() + timedelta(days=30):
                 await self.bot.embed_notify(ctx, 1, 'Error',
-                                        'Unable to create a tournament scheduled for more than a month from now!')
+                                            'Unable to create a tournament scheduled for more than a month from now!')
         except:
             await self.bot.embed_notify(ctx, 1, 'Error', 'Invalid time format! Please try again.')
             return
-        tournament = Event(real_id=ctx.guild.id, name=ctx.guild.name, tournament_name=name,
+        tournament = Event(guild_id=ctx.guild.id, guild_name=ctx.guild.name, tournament_name=name,
                            type=tournament_type.upper(), event_date=tournament_time,
                            confirmed=False, created=datetime.utcnow(), creator=ctx.author.id)
         tournament.save()
@@ -98,7 +98,7 @@ class Tournament:
             if tournament.guild_id == unique_id and not tournament.confirmed:
                 if str(ctx.author.id) not in [tournament.creator, self.bot.owner_id]:
                     await self.bot.embed_notify(ctx, 1, 'Error',
-                                            'Only the event creator or server staff may confirm events!')
+                                                'Only the event creator or server staff may confirm events!')
                     return
                 tournament.confirmed = True
                 tournament.save()
@@ -106,7 +106,7 @@ class Tournament:
                 break
         if found:
             await self.bot.embed_notify(ctx, 0, 'Tournament Created',
-                                    'Players can now join using **' + self.bot.command_prefix + 'tournament join**')
+                                        'Players can now join using **' + self.bot.command_prefix + 'tournament join**')
             self.bot.logger.info('Tournament confirmed with ID ' + unique_id)
         else:
             await self.bot.embed_notify(ctx, 1, 'Error', 'No tournament was found with the provided ID!')
@@ -125,17 +125,17 @@ class Tournament:
                 await self.bot.embed_notify(ctx, 1, 'Error',
                                             'Only the event creator or server staff may delete events!')
                 return
-            for team in Team.select().where(Team.tournament == ctx.guild.id):
+            for team in Team.select().where(Team.tournament == str(ctx.guild.id)):
                 for player in Player.select().where(Player.teams.contains(team.team_id)):
                     player.teams = str(player.teams).replace(team.team_id + '|', '')
                     player.save()
                 team.delete_instance()
             for player in Player.select().where(
-                    Player.tournaments.contains(ctx.guild.id)):  # Remove the tournament from players!
-                player.tournaments = str(player.tournaments).replace(ctx.guild.id + '|', '')
+                    Player.tournaments.contains(str(ctx.guild.id))):  # Remove the tournament from players!
+                player.tournaments = str(player.tournaments).replace(str(ctx.guild.id) + '|', '')
                 player.save()
             await self.bot.embed_notify(ctx, 2, 'Tournament Deleted',
-                                    'Deleted the tournament called **' + tournament.tournament_name + '**.')
+                                        'Deleted the tournament called **' + tournament.tournament_name + '**.')
             tournament.delete_instance()
             self.bot.logger.info('Tournament deleted from database')
         except DoesNotExist:
@@ -145,23 +145,23 @@ class Tournament:
     async def _join(self, ctx):
         """Join an ongoing tournament."""
         try:
-            tournament = Event.get(Event.guild_id == ctx.guild.id)
+            tournament = Event.get(Event.guild_id == str(ctx.guild.id))
         except DoesNotExist:
             await self.bot.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
             return
         try:
-            player = Player.get(Player.discord_id == ctx.author.id)
+            player = Player.get(Player.discord_id == str(ctx.author.id))
             if player.tournaments is not None:
-                player.tournaments += ctx.guild.id + '|'
+                player.tournaments += str(ctx.guild.id) + '|'
                 player.save()
             else:
                 player.tournaments = ''
-                player.tournaments += ctx.guild.id + '|'
+                player.tournaments += str(ctx.guild.id) + '|'
                 player.save()
             tournament.size = tournament.size + 1
             tournament.save()
             await self.bot.embed_notify(ctx, 0, 'Tournament Joined',
-                                    'You joined **' + tournament.tournament_name + '**. Have fun!')
+                                        'You joined **' + tournament.tournament_name + '**. Have fun!')
         except DoesNotExist:
             await self.bot.embed_notify(ctx, 1, 'Error', 'You must link your Epic ID to your Discord account!')
 
@@ -169,7 +169,7 @@ class Tournament:
     async def _leave(self, ctx):
         """Leave a tournament."""
         try:
-            tournament = Event.get(Event.guild_id == ctx.guild.id)
+            tournament = Event.get(Event.guild_id == str(ctx.guild.id))
         except DoesNotExist:
             await self.bot.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
             return
@@ -178,7 +178,7 @@ class Tournament:
             if player.tournaments is not None:
                 player.tournaments = str(player.tournaments).replace(ctx.guild.id + '|', '')
                 await self.bot.embed_notify(ctx, 2, 'Tournament Left',
-                                        'You left **' + tournament.tournament_name + '**. See you later!')
+                                            'You left **' + tournament.tournament_name + '**. See you later!')
                 tournament.size = tournament.size - 1
                 tournament.save()
             else:
@@ -196,17 +196,16 @@ class Tournament:
                         break
 
     @tournament.command(name='info')
-    async def _info(self, ctx, unique_id: str):
+    async def _info(self, ctx):
         """View information about a tournament."""
         embed = discord.Embed()
         try:
-            tournament = Event.get(Event.guild_id == ctx.guild.id)
+            tournament = Event.get(Event.guild_id == str(ctx.guild.id))
         except DoesNotExist:
             await self.bot.embed_notify(ctx, 1, 'Error', 'No tournament exists on this server!')
             return
-        creator = discord.utils.find(lambda u: u.id == tournament.creator, self.bot.get_all_members())
-        if tournament.teams is not None and len(
-                tournament.teams) > 0:
+        creator = discord.utils.find(lambda u: u.id == int(tournament.creator), self.bot.get_all_members())
+        if tournament.teams is not None and len(tournament.teams) > 0:
             size = len(tournament.teams.split('|'))
         else:
             size = 'None'

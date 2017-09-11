@@ -9,7 +9,7 @@ import requests
 from discord.ext import commands
 
 from cogs.database import *
-from .util.paginator import Pages
+from .util.paginator import Pages, EmbedPages
 
 
 class Agora:
@@ -232,10 +232,9 @@ class Agora:
             await self.bot.embed_notify(ctx, 1, 'Error',
                                         'Hero does not exist, if the hero is new be patient and try again in a few days!')
             return
-
-        for i in range(0, 3):
-            embed = self.get_agora_hero_deck(hero_name=results.hero_name, image=results.icon, num=i)
-            await ctx.send(embed=embed)
+        p = EmbedPages(ctx, icon_url=self.icon_url, entries=tuple(
+            self.get_agora_hero_deck(hero_name=results.hero_name, image=results.icon, num=i) for i in range(0, 3)))
+        await p.paginate()
 
     @commands.command(aliases=['guide', 'g'])
     async def heroguide(self, ctx):
@@ -254,10 +253,9 @@ class Agora:
             await self.bot.embed_notify(ctx, 1, 'Error',
                                         'Hero does not exist, if the hero is new be patient and try again in a few days!')
             return
-
-        for i in range(0, 3):
-            embed = self.get_agora_hero_guide(hero_id=results.agora_data_name, image=results.icon, num=i)
-            await ctx.send(embed=embed)
+        p = EmbedPages(ctx, icon_url=self.icon_url, entries=tuple(
+            self.get_agora_hero_guide(hero_id=results.agora_data_name, image=results.icon, num=i) for i in range(0, 3)))
+        await p.paginate()
 
     @commands.command()
     async def card(self, ctx, *args):
@@ -269,10 +267,9 @@ class Agora:
             else:
                 results = Card.select().where(Card.card_name.contains(search))
                 if results.count() > 1:
-                    description = ''
-                    for result in results:
-                        description += '[' + result.card_name + '](https://agora.gg/card/' + result.card_id + ')\n'
-                    await self.bot.embed_notify(ctx, 2, 'Multiple Cards Found', description)
+                    p = EmbedPages(ctx, icon_url=self.icon_url,
+                                   entries=tuple(self.build_card(card.card_name) for card in results))
+                    await p.paginate()
                     return
                 elif results.count() == 0:
                     await self.bot.embed_notify(ctx, 1, 'Error', 'The card you are searching for does not exist!')
@@ -302,10 +299,9 @@ class Agora:
             else:
                 results = Gem.select().where(Gem.gem_name.contains(search))
                 if results.count() > 1:
-                    description = ''
-                    for result in results:
-                        description += result.gem_name + '\n'
-                    await self.bot.embed_notify(ctx, 2, 'Multiple Gems Found', description)
+                    p = EmbedPages(ctx, icon_url=self.icon_url,
+                                   entries=tuple(self.build_gem(gem.gem_name) for gem in results))
+                    await p.paginate()
                     return
                 elif results.count() == 0:
                     await self.bot.embed_notify(ctx, 1, 'Error', 'The gem you are searching for does not exist!')
@@ -500,7 +496,7 @@ class Agora:
     def get_agora_hero_deck(self, hero_name, image, num):
         """Get the most popular decks on Agora.gg for a hero and return a Discord embed object."""
         url = 'https://api.agora.gg/v2/decks?tag=' + quote(hero_name, safe='') + '&sort=-votes&major=1&lc=en&ssl=true'
-        embed = discord.Embed()
+        embed = discord.Embed(colour=discord.Colour.blue())
 
         try:
             with requests.get(url=url) as r:
@@ -520,7 +516,7 @@ class Agora:
     def get_agora_hero_guide(self, hero_id, image, num):
         """Get a guide for a specific hero from Agora.gg"""
         url = 'https://api.agora.gg/v1/guides?name=&hero=' + hero_id + '&role=&page=0&sort=votes&&lc=en&ssl=true'
-        embed = discord.Embed()
+        embed = discord.Embed(colour=discord.Colour.blue())
 
         try:
             with requests.get(url=url) as r:

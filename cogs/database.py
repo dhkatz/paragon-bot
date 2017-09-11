@@ -35,29 +35,14 @@ class Database:
             await self.bot.leave_server(guild)
             return
 
-        for role in guild.me.roles:
-            if role.name == 'Music':
-                music_role = role
-                guild = Server(server_id=guild.id, server_name=guild.name, use_music_role=True,
-                               music_role_id=music_role.id)
-                guild.save()
-                self.bot.logger.info('Added server ' + guild.name + ' to database!')
-                return
-
-        music_permissions = guild.default_role
-        music_permissions = music_permissions.permissions
-
-        music_role = await self.bot.create_role(guild, name='Music', position=-1, permissions=music_permissions,
-                                                hoist=False,
-                                                colour=discord.Color(11815924), mentionable=False)
-        guild = Server(server_id=guild.id, server_name=guild.name, use_music_role=True, music_role_id=music_role.id)
-        guild.save()
+        new_guild = Server(server_id=guild.id, server_name=guild.name)
+        new_guild.save()
         self.bot.logger.info('Added server ' + guild.name + ' to database!')
 
     async def remove_server(self, guild: discord.Guild):
         self.bot.logger.info('Removing ' + guild.name + ' from database...')
         try:
-            server_left = Server.get(Server.real_id == guild.id)
+            server_left = Server.get(Server.guild_id == guild.id)
             server_left.delete_instance()
         except DoesNotExist:
             self.bot.logger.error('Somehow a server we left did not exist in the database!')
