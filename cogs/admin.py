@@ -115,6 +115,22 @@ class Admin:
 
         await self.bot.embed_notify(ctx, 0, 'Success', f'{user.nick} was removed from the blacklist!')
 
+    @commands.command(name='guilds', hidden=True)
+    @commands.is_owner()
+    async def list_guilds(self, ctx):
+        p = Pages(ctx, entries=tuple(guild.name + ': ID ' + str(guild.id) for guild in self.bot.guilds))
+        await p.paginate()
+
+    @commands.command(name='leave', hidden=True)
+    @commands.is_owner()
+    async def leave_server(self, ctx, guild_id: int = 0):
+        print(self.bot.guilds)
+        if guild_id == 0 or self.bot.get_guild(guild_id) not in self.bot.guilds:
+            await self.bot.embed_notify(ctx, 1, 'Error', 'Invalid ID or bot is not in server!')
+            return
+        guild = self.bot.get_guild(guild_id)
+        await guild.leave()
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

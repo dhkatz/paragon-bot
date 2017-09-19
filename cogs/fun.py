@@ -77,6 +77,11 @@ class Fun:
         """Feed your cat some spaghetti."""
         await ctx.send('https://i.imgur.com/MWQb0Ow.jpg')
 
+    @commands.command()
+    async def putjacksonindiamond(self, ctx):
+        """He'll get there one day."""
+        await ctx.send('https://i.imgur.com/xumheZ5.gif')
+
 
 class Config:
     """

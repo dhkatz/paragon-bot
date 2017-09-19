@@ -642,6 +642,7 @@ class Agora:
                 embed.add_field(name=effect.split(',', 1)[0], value=effect.split(',', 1)[1], inline=False)
         url = 'https://static.agora.gg/cards2/' + result.card_name.replace(' ', '').replace('-', '').replace('\'',
                                                                                                              '').lower() + '-275.jpg'
+        print(url)
         embed.set_thumbnail(url=url)
         embed.set_footer(text='Paragon', icon_url=self.icon_url)
         return embed
@@ -703,6 +704,7 @@ class Card(BaseModel):
     vitality_cost = SmallIntegerField(default=0)
     intellect_cost = SmallIntegerField(default=0)
     levels = CharField()
+    icon = CharField()
 
 
 class Gem(BaseModel):

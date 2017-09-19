@@ -17,13 +17,7 @@ class Reddit:
         self.subreddit = self.instance.subreddit('paragon')
         self.bot.logger.info('Logged into Reddit as ' + str(self.instance.user.me()))
 
-    @commands.group(name='reddit')
-    async def reddit(self, ctx):
-        """Useful Reddit commands."""
-        if ctx.invoked_subcommand is None:
-            await ctx.send('Reddit functionality is still a WIP!')
-
-    @reddit.command(name='announcements')
+    @commands.command(name='announcements')
     async def reddit_stickied(self, ctx):
         """Get the current stickied posts from /r/Paragon!"""
         embeds = []
@@ -33,20 +27,20 @@ class Reddit:
             except prawcore.NotFound:
                 continue
             else:
-                embeds.append(self.build_submission_embed(sticky))
+                embeds.append(await self.build_submission_embed(sticky))
         if len(embeds) == 0:
             self.bot.embed_notify(ctx, 2, 'Notice', 'There are currently no announcements!')
             return
         p = EmbedPages(ctx, icon_url=self.bot.icon_url, entries=embeds)
         await p.paginate()
 
-    @reddit.command(name='official')
+    @commands.command(name='official')
     async def reddit_official(self, ctx):
         """Get official posts from Epic Games currently on the front page."""
         embeds = []
         for submission in self.subreddit.hot():
             if str(submission.link_flair_text).upper() == 'OFFICIAL':
-                embeds.append(submission)
+                embeds.append(await self.build_submission_embed(submission))
 
         if len(embeds) == 0:
             self.bot.embed_notify(ctx, 2, 'Notice', 'There are currently no official posts!')
