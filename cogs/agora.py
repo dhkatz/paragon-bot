@@ -21,6 +21,9 @@ class Agora:
         self.icon_url = 'https://e-stats.io/src/images/games/paragon/logo-white-icon.png'
         self.heroes = configparser.ConfigParser()
         self.heroes.read(self.hero_file)
+        self.set_cards()
+        self.set_heroes()
+        self.set_gems()
 
     def set_heroes(self):
         if 'hero' not in self.bot.db.get_tables():
@@ -59,6 +62,7 @@ class Agora:
                 js = r.json()
                 for card in js:
                     levels = ''
+                    attributes = ''
                     trait = card['trait'] if 'trait' in card else None
                     gold_cost = card['goldCost'] if 'goldCost' in card else 0
                     intellect_cost = card['intellectGemCost'] if 'intellectGemCost' in card else 0
@@ -67,6 +71,9 @@ class Agora:
 
                     for level in card['levels']:
                         levels = str(level['level']) + '|' + level['levelImage'] + '|'
+                        for effect in EFFECT_MAP.keys():
+                            if effect in level:
+                                attributes += effect + ', ' + str(level[effect]) + '|'
                         for ability in level['abilities']:
                             levels += ability['name'] + ', ' + ability['description'] + '|'
 
@@ -74,7 +81,8 @@ class Agora:
                                                            rarity=card['rarity'], affinity=card['affinity'],
                                                            gold_cost=gold_cost, agility_cost=agility_cost,
                                                            vitality_cost=vitality_cost, intellect_cost=intellect_cost,
-                                                           trait=trait, levels=levels)
+                                                           trait=trait, levels=levels, attributes=attributes,
+                                                           icon=card['icon'])
                     new_card.save()
         except Exception as e:
             self.bot.logger.exception(e)
@@ -260,23 +268,27 @@ class Agora:
     @commands.command()
     async def card(self, ctx, *args):
         """Returns information on a card or multiple cards. Surround a card name with quotes."""
+        embeds = []
         for search in args:
             results = Card.select().where(Card.card_name == search).count()
             if results == 1:
-                embed = self.build_card(search)
+                embeds.append(self.build_card(search))
             else:
                 results = Card.select().where(Card.card_name.contains(search))
                 if results.count() > 1:
-                    p = EmbedPages(ctx, icon_url=self.icon_url,
-                                   entries=tuple(self.build_card(card.card_name) for card in results))
-                    await p.paginate()
+                    embeds.append(self.build_card(card.card_name) for card in results)
                     return
                 elif results.count() == 0:
-                    await self.bot.embed_notify(ctx, 1, 'Error', 'The card you are searching for does not exist!')
+                    await self.bot.embed_notify(ctx, 1, 'Error',
+                                                f'The card, \'{search}\', you are searching for does not exist!')
                     return
                 else:
-                    embed = self.build_card(search)
-            await ctx.send(embed=embed)
+                    embeds.append(self.build_card(search))
+        if len(embeds) < 2:
+            await ctx.send(embed=embeds.pop())
+            return
+        p = EmbedPages(ctx, icon_url=self.icon_url, entries=embeds)
+        await p.paginate()
 
     @commands.command()
     async def cards(self, ctx):
@@ -292,23 +304,27 @@ class Agora:
     @commands.command()
     async def gem(self, ctx, *args):
         """Returns information on a gem or multiple gems. Surround a gem name with quotes."""
+        embeds = []
         for search in args:
             results = Gem.select().where(Gem.gem_name == search).count()
             if results == 1:
-                embed = self.build_gem(search)
+                embeds.append(self.build_card(search))
             else:
                 results = Gem.select().where(Gem.gem_name.contains(search))
                 if results.count() > 1:
-                    p = EmbedPages(ctx, icon_url=self.icon_url,
-                                   entries=tuple(self.build_gem(gem.gem_name) for gem in results))
-                    await p.paginate()
+                    embeds.append(self.build_card(gem.card_name) for gem in results)
                     return
                 elif results.count() == 0:
-                    await self.bot.embed_notify(ctx, 1, 'Error', 'The gem you are searching for does not exist!')
+                    await self.bot.embed_notify(ctx, 1, 'Error',
+                                                f'The gem, \'{search}\', you are searching for does not exist!')
                     return
                 else:
-                    embed = self.build_gem(search)
-            await ctx.send(embed=embed)
+                    embeds.append(self.build_gem(search))
+        if len(embeds) < 2:
+            await ctx.send(embed=embeds.pop())
+            return
+        p = EmbedPages(ctx, icon_url=self.icon_url, entries=embeds)
+        await p.paginate()
 
     @commands.command()
     async def ign(self, ctx, epic_id: str = ''):
@@ -637,13 +653,18 @@ class Agora:
         embed.description = result.affinity + ' | ' + result.rarity
         if result.trait is not None:
             embed.add_field(name='**' + result.trait + '**', value=TRAIT_MAP[result.trait], inline=False)
+        if len(result.attributes) > 0:
+            attributes = ''
+            for attribute in result.attributes.split('|'):
+                if len(attribute) == 0:
+                    continue
+                attributes += attribute.split(',', 1)[1] + ' ' + EFFECT_MAP[attribute.split(',', 1)[0]]
+            embed.add_field(name='Attributes', value=attributes, inline=False)
         for effect in result.levels.split('|')[2:]:
             if len(effect) > 0:
                 embed.add_field(name=effect.split(',', 1)[0], value=effect.split(',', 1)[1], inline=False)
-        url = 'https://static.agora.gg/cards2/' + result.card_name.replace(' ', '').replace('-', '').replace('\'',
-                                                                                                             '').lower() + '-275.jpg'
-        print(url)
-        embed.set_thumbnail(url=url)
+        # url = 'https://static.agora.gg/cards/275/' + result.icon + '.jpg'
+        # embed.set_thumbnail(url=url)
         embed.set_footer(text='Paragon', icon_url=self.icon_url)
         return embed
 
@@ -677,6 +698,17 @@ TRAIT_MAP = {'Cultivate': 'Gold cost is reduced per attribute point purchased.',
              'Combustible': 'Effect disappears upon death', 'Cursed': 'Card cannot be unequipped.',
              'Consumable': 'Card is removed after activation.'}
 
+EFFECT_MAP = {
+    'healthRegen': 'Health Regen',
+    'power': 'Power',
+    'abilityArmor': 'Ability Armor',
+    'health': 'Max Health',
+    'manaRegen': 'Mana Regen',
+    'mana': 'Max Mana',
+    'attackSpeed': 'Attack Speed',
+    'basicArmor': 'Basic Armor'
+}
+
 
 class Hero(BaseModel):
     agora_hero_id = CharField(unique=True)
@@ -703,6 +735,7 @@ class Card(BaseModel):
     agility_cost = SmallIntegerField(default=0)
     vitality_cost = SmallIntegerField(default=0)
     intellect_cost = SmallIntegerField(default=0)
+    attributes = CharField()
     levels = CharField()
     icon = CharField()
 

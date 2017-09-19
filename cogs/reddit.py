@@ -17,7 +17,11 @@ class Reddit:
         self.subreddit = self.instance.subreddit('paragon')
         self.bot.logger.info('Logged into Reddit as ' + str(self.instance.user.me()))
 
-    @commands.command(name='announcements')
+    @commands.group(name='reddit')
+    async def reddit(self, ctx):
+        pass
+
+    @reddit.command(name='sticky')
     async def reddit_stickied(self, ctx):
         """Get the current stickied posts from /r/Paragon!"""
         embeds = []
