@@ -17,7 +17,7 @@ from pytz import timezone
 import data.config.load as config
 from cogs.database import *
 
-__version__ = '0.31.1'
+__version__ = '0.42.0'
 
 BOT_DESCRIPTION = '''A Discord bot built for Paragon servers.'''
 BOT_STATUS = discord.Game(name='Paragon (Say ' + config.__prefix__ + 'help)')
@@ -38,14 +38,17 @@ class Bot(commands.Bot):
         self.clever = CleverWrap(config.__cleverbot__)
         super().__init__(*args, command_prefix=config.__prefix__, **kwargs)
 
-    async def embed_notify(self, ctx: commands.Context, error: int, title: str, message: str):
+    async def embed_notify(self, ctx: commands.Context, error: int, title: str, message: str, raw: bool = False):
         """Create and reply Discord embeds in one line."""
         embed = discord.Embed()
         embed.title = title
         embed.colour = discord.Colour.dark_red() if error == 1 else discord.Colour.green() if error == 0 else discord.Colour.blue()
         embed.description = message
         embed.set_footer(text='Paragon', icon_url=self.icon_url)
-        await ctx.send(embed=embed)
+        if raw:
+            return embed
+        else:
+            await ctx.send(embed=embed)
 
 
 def initialize(bot_class=Bot):
@@ -86,7 +89,7 @@ def initialize(bot_class=Bot):
                 embed.add_field(name='Message', value=ctx.message.clean_content)
                 embed.timestamp = datetime.datetime.utcnow()
                 try:
-                    await bot.owner.send(embed=embed)
+                    await bot.get_user(bot.owner_id).send(embed=embed)
                 except:
                     raise
         elif isinstance(error, commands.CommandOnCooldown):

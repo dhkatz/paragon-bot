@@ -25,86 +25,6 @@ class Agora:
         self.set_heroes()
         self.set_gems()
 
-    def set_heroes(self):
-        if 'hero' not in self.bot.db.get_tables():
-            Hero.create_table()
-
-        url = 'https://api.agora.gg/v1/gamedata/heroes?lc=en&ssl=true'
-
-        try:
-            with requests.get(url=url) as r:
-                if r.status_code == 200:
-                    js = r.json()
-                    for hero in js:
-                        lane = self.heroes[hero['slug']]['lane']
-                        icon = self.heroes[hero['slug']]['icon']
-
-                        new_hero, created = Hero.get_or_create(agora_hero_id=hero['id'], hero_name=hero['name'],
-                                                               slug=hero['slug'],
-                                                               type=hero['type'], attack=hero['attack'],
-                                                               affinity1=hero['affinity1'],
-                                                               affinity2=hero['affinity2'],
-                                                               damage_type=hero['damageType'],
-                                                               abilities=hero['abilities'], icon=icon,
-                                                               agora_data_name=hero['code'], roles=lane)
-                        new_hero.save()
-        except Exception as e:
-            self.bot.logger.exception(e)
-
-    def set_cards(self):
-        if 'card' not in self.bot.db.get_tables():
-            Card.create_table()
-
-        url = 'https://api.agora.gg/v2/cards'
-
-        try:
-            with requests.get(url=url) as r:
-                js = r.json()
-                for card in js:
-                    levels = ''
-                    attributes = ''
-                    trait = card['trait'] if 'trait' in card else None
-                    gold_cost = card['goldCost'] if 'goldCost' in card else 0
-                    intellect_cost = card['intellectGemCost'] if 'intellectGemCost' in card else 0
-                    agility_cost = card['agilityGemCost'] if 'agilityGemCost' in card else 0
-                    vitality_cost = card['vitalityGemCost'] if 'vitalityGemCost' in card else 0
-
-                    for level in card['levels']:
-                        levels = str(level['level']) + '|' + level['levelImage'] + '|'
-                        for effect in EFFECT_MAP.keys():
-                            if effect in level:
-                                attributes += effect + ', ' + str(level[effect]) + '|'
-                        for ability in level['abilities']:
-                            levels += ability['name'] + ', ' + ability['description'] + '|'
-
-                    new_card, created = Card.get_or_create(card_id=card['id'], card_name=card['name'],
-                                                           rarity=card['rarity'], affinity=card['affinity'],
-                                                           gold_cost=gold_cost, agility_cost=agility_cost,
-                                                           vitality_cost=vitality_cost, intellect_cost=intellect_cost,
-                                                           trait=trait, levels=levels, attributes=attributes,
-                                                           icon=card['icon'])
-                    new_card.save()
-        except Exception as e:
-            self.bot.logger.exception(e)
-
-    def set_gems(self):
-        if 'gem' not in self.bot.db.get_tables():
-            Gem.create_table()
-
-        url = 'https://api.agora.gg/v2/gems'
-
-        try:
-            with requests.get(url=url) as r:
-                js = r.json()
-                for gem in js:
-                    new_gem, created = Gem.get_or_create(gem_name=gem['name'], gem_id=gem['id'],
-                                                         template=gem['template'],
-                                                         description=gem['description'], slot=gem['slot'],
-                                                         stone=gem['stone'], shape=gem['shape'])
-                    new_gem.save()
-        except Exception as e:
-            self.bot.logger.exception(e)
-
     @staticmethod
     def random_hero():
         """Get a random hero from the database."""
@@ -117,30 +37,26 @@ class Agora:
         return hero
 
     @commands.command()
-    async def elo(self, ctx):
+    async def elo(self, ctx, player_name: str = ''):
         """Returns a player's elo by name from Agora.gg"""
 
-        message = str(ctx.message.content).replace(self.bot.command_prefix + 'elo', '')
-
         # Command has specified a username
-        if len(message) > 1:
-            user = message.replace(' ', '', 1)
-        else:
+        if len(player_name) == 0:
             try:
                 # Player is stored in DB
                 player = Player.get(Player.discord_id == ctx.author.id)
-                user = player.player_name
+                player_name = player.player_name
             except peewee.DoesNotExist:
                 if isinstance(ctx.author, discord.Member):
                     # Public channel message
-                    user = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
+                    player_name = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
                 else:
                     # Private channel. We have to pull by name or DB
-                    user = ctx.author.name
+                    player_name = ctx.author.name
 
-        user_id = self.get_agora_player_id(username=user)
+        user_id = self.get_agora_player_id(username=player_name)
         if user_id == 'null':
-            if len(message) > 1:
+            if len(player_name) > 0:
                 await self.bot.embed_notify(ctx, 1, 'Error',
                                             'The user you entered does not exist, please re-check the name!')
             else:
@@ -152,30 +68,26 @@ class Agora:
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def stats(self, ctx):
+    async def stats(self, ctx, player_name: str = ''):
         """Returns a player's stats from Agora.gg"""
 
-        message = str(ctx.message.content).replace(self.bot.command_prefix + 'stats', '')
-
         # Command has specified a username
-        if len(message) > 1:
-            user = message.replace(' ', '', 1)
-        else:
+        if len(player_name) == 0:
             try:
                 # Player is stored in DB
                 player = Player.get(Player.discord_id == ctx.author.id)
-                user = player.player_name
+                player_name = player.player_name
             except peewee.DoesNotExist:
                 if isinstance(ctx.author, discord.Member):
                     # Public channel message
-                    user = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
+                    player_name = ctx.author.nick if ctx.author.nick is not None else ctx.author.name
                 else:
                     # Private channel. We have to pull by name or DB
-                    user = ctx.author.name
+                    player_name = ctx.author.name
 
-        user_id = self.get_agora_player_id(username=user)
+        user_id = self.get_agora_player_id(username=player_name)
         if user_id == 'null':
-            if len(message) > 1:
+            if len(player_name) > 0:
                 await self.bot.embed_notify(ctx, 1, 'Error',
                                             'The user you entered does not seem exist, please re-check the name!')
             else:
@@ -366,6 +278,86 @@ class Agora:
                 await self.bot.embed_notify(ctx, 1, 'Error',
                                             'No player name specified and no Epic ID was found linked to your account!\n(See \'' + self.bot.command_prefix + 'help ign\' for more command information!)')
 
+    def set_heroes(self):
+        if 'hero' not in self.bot.db.get_tables():
+            Hero.create_table()
+
+        url = 'https://api.agora.gg/v1/gamedata/heroes?lc=en&ssl=true'
+
+        try:
+            with requests.get(url=url) as r:
+                if r.status_code == 200:
+                    js = r.json()
+                    for hero in js:
+                        lane = self.heroes[hero['slug']]['lane']
+                        icon = self.heroes[hero['slug']]['icon']
+
+                        new_hero, created = Hero.get_or_create(agora_hero_id=hero['id'], hero_name=hero['name'],
+                                                               slug=hero['slug'],
+                                                               type=hero['type'], attack=hero['attack'],
+                                                               affinity1=hero['affinity1'],
+                                                               affinity2=hero['affinity2'],
+                                                               damage_type=hero['damageType'],
+                                                               abilities=hero['abilities'], icon=icon,
+                                                               agora_data_name=hero['code'], roles=lane)
+                        new_hero.save()
+        except Exception as e:
+            self.bot.logger.exception(e)
+
+    def set_cards(self):
+        if 'card' not in self.bot.db.get_tables():
+            Card.create_table()
+
+        url = 'https://api.agora.gg/v2/cards'
+
+        try:
+            with requests.get(url=url) as r:
+                js = r.json()
+                for card in js:
+                    levels = ''
+                    attributes = ''
+                    trait = card['trait'] if 'trait' in card else None
+                    gold_cost = card['goldCost'] if 'goldCost' in card else 0
+                    intellect_cost = card['intellectGemCost'] if 'intellectGemCost' in card else 0
+                    agility_cost = card['agilityGemCost'] if 'agilityGemCost' in card else 0
+                    vitality_cost = card['vitalityGemCost'] if 'vitalityGemCost' in card else 0
+
+                    for level in card['levels']:
+                        levels = str(level['level']) + '|' + level['levelImage'] + '|'
+                        for effect in EFFECT_MAP.keys():
+                            if effect in level:
+                                attributes += effect + ', ' + str(level[effect]) + '|'
+                        for ability in level['abilities']:
+                            levels += ability['name'] + ', ' + ability['description'] + '|'
+
+                    new_card, created = Card.get_or_create(card_id=card['id'], card_name=card['name'],
+                                                           rarity=card['rarity'], affinity=card['affinity'],
+                                                           gold_cost=gold_cost, agility_cost=agility_cost,
+                                                           vitality_cost=vitality_cost, intellect_cost=intellect_cost,
+                                                           trait=trait, levels=levels, attributes=attributes,
+                                                           icon=card['icon'])
+                    new_card.save()
+        except Exception as e:
+            self.bot.logger.exception(e)
+
+    def set_gems(self):
+        if 'gem' not in self.bot.db.get_tables():
+            Gem.create_table()
+
+        url = 'https://api.agora.gg/v2/gems'
+
+        try:
+            with requests.get(url=url) as r:
+                js = r.json()
+                for gem in js:
+                    new_gem, created = Gem.get_or_create(gem_name=gem['name'], gem_id=gem['id'],
+                                                         template=gem['template'],
+                                                         description=gem['description'], slot=gem['slot'],
+                                                         stone=gem['stone'], shape=gem['shape'])
+                    new_gem.save()
+        except Exception as e:
+            self.bot.logger.exception(e)
+
     def get_agora_player_id(self, username):
         url = 'https://api.agora.gg/v1/players/search?name=' + username
         player_id = 'null'
@@ -527,6 +519,7 @@ class Agora:
                     embed.set_footer(text='Paragon', icon_url=self.icon_url)
         except Exception as e:
             self.bot.logger.exception(e)
+
         return embed
 
     def get_agora_hero_guide(self, hero_id, image, num):

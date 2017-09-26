@@ -60,7 +60,7 @@ class Reddit:
         embed.url = submission.shortlink
         embed.description = submission.selftext[:240] + '...'
         embed.add_field(name='Author', value=submission.author.name, inline=False)
-        embed.add_field(name='Time', value=time.strftime("%a, %d %b %Y %H:%M", time.gmtime(submission.created_utc)),
+        embed.add_field(name='Time', value=time.strftime("%a, %d %b %Y %H:%M GMT", time.gmtime(submission.created_utc)),
                         inline=False)
         return embed
 

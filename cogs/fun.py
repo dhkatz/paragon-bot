@@ -14,13 +14,12 @@ class Fun:
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = logging.getLogger('discord')
         self.word_list, self.bases = {}, []
         self.words = Config(os.path.join(os.path.dirname(__file__), 'words.json'))
         self.bot.scheduler.add_job(self.goodnight_jackson, 'cron', hour=23, minute=30)
 
     async def goodnight_jackson(self):
-        self.logger.info('Saying goodnight to Jackson...')
+        self.bot.logger.info('Saying goodnight to Jackson...')
         channel = discord.utils.find(lambda c: c.id == 222462913724547072, self.bot.get_all_channels())
         await channel.send('Goodnight Jackson')
 
@@ -52,6 +51,28 @@ class Fun:
             await ctx.send(url)
 
     @commands.command()
+    async def ud(self, ctx, *msg):
+        """Search words on Urban Dictionary"""
+        word = ' '.join(msg)
+        api = "http://api.urbandictionary.com/v0/define"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api, params={'term': word}) as r:
+                if r.status == 200:
+                    response = await r.json()
+                else:
+                    return await ctx.send("Could not find that word!")
+
+        embed = discord.Embed(title='Urban Dictionary - ' + word, color=0x00FF00)
+        embed.description = response['list'][0]['definition']
+        embed.set_thumbnail(
+            url='https://images-ext-2.discordapp.net/external/B4lcjSHEDA8RcuizSOAdc92ithHovZT6WkRAX-da_6o/https/erisbot.com/assets/emojis/urbandictionary.png')
+        embed.add_field(name="Examples:", value=response['list'][0]["example"][:253] + '...')
+        embed.set_footer(text="Tags: " + ', '.join(response['tags']))
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def shitpost(self, ctx):
         """Have the bot shitpost in chat."""
@@ -62,12 +83,12 @@ class Fun:
 
         while "%" in base:
             if self.bot.dev:
-                self.logger.info(base)
+                self.bot.logger.info(base)
             for regex in self.words["@replaces"]:
                 base = self.shitpost_sub(base, regex)
 
         if self.bot.dev:
-            self.logger.info(base)
+            self.bot.logger.info(base)
         self.words.reload()
         await ctx.send(base)
 
