@@ -70,7 +70,7 @@ class Admin:
         if 'add' not in str(ctx.invoked_subcommand) and 'remove' not in str(ctx.invoked_subcommand):
             if Player.select().where(Player.blacklist == True).count() > 0:
                 try:
-                    rows = Player.select().where(Player.blacklist == False)
+                    rows = Player.select().where(Player.blacklist == True)
                     p = Pages(ctx, entries=tuple(self.bot.get_user(int(player.discord_id)).name for player in rows))
                     p.embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
                     await p.paginate()

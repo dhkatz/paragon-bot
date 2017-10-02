@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import random
 import re
@@ -7,6 +6,10 @@ import re
 import aiohttp
 import discord
 from discord.ext import commands
+from peewee import *
+from datetime import datetime
+from urlextract import URLExtract
+from urllib import parse
 
 
 class Fun:
@@ -30,7 +33,6 @@ class Fun:
         return re.sub("%" + regex, word, string, 1)
 
     @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.user)
     async def cat(self, ctx):
         """Get a random cat picture from random.cat"""
         if random.randint(0, 1) == 1:
@@ -71,6 +73,22 @@ class Fun:
         embed.set_footer(text="Tags: " + ', '.join(response['tags']))
 
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def googleloc(self, ctx, *, location):
+        """Generates info about an location or a Zip Code"""
+        word = location
+        api = 'https://maps.googleapis.com/maps/api/geocode/json?'
+        key = '&key=AIzaSyCI6Ldnxl0D5zPzTedRSolzFREjYe_hxys'
+        url = api + parse.urlencode({'address': word}) + key
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as r:
+                response = await r.json()
+                if (response["status"]) == "OK":
+                    embed = discord.Embed(title='Google Geolocation Stats', description="-", color=0x00FF00)
+                    embed.add_field(name="Formatted Address", value=response['results'][0]['formatted_address'], inline=False)
+                    embed.add_field(name="Location", value=response['results'][0]['geometry']['location']['lat'], inline=False)
+                    await ctx.send(embed=embed)
 
     @commands.command()
     @commands.cooldown(1, 3, commands.BucketType.user)
