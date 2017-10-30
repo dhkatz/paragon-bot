@@ -17,7 +17,7 @@ class Agora:
 
     def __init__(self, bot):
         self.bot = bot
-        self.hero_file = '{}/heroes.ini'.format('C:/Users/mcilu/PycharmProjects/Paragon-Discord-Bot/Database')
+        self.hero_file = '{}/heroes.ini'.format('data/heroes.ini')
         self.icon_url = 'https://e-stats.io/src/images/games/paragon/logo-white-icon.png'
         self.heroes = configparser.ConfigParser()
         self.heroes.read(self.hero_file)
