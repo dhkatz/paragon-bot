@@ -22,6 +22,7 @@ class Reddit:
         pass
 
     @reddit.command(name='sticky')
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def reddit_stickied(self, ctx):
         """Get the current stickied posts from /r/Paragon!"""
         embeds = []
@@ -39,11 +40,12 @@ class Reddit:
         await p.paginate()
 
     @commands.command(name='official')
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def reddit_official(self, ctx):
         """Get official posts from Epic Games currently on the front page."""
         embeds = []
         for submission in self.subreddit.hot():
-            if str(submission.link_flair_text).upper() == 'OFFICIAL':
+            if str(submission.link_flair_text).upper() in ['OFFICIAL', 'EPIC RESPONSE']:
                 embeds.append(await self.build_submission_embed(submission))
 
         if len(embeds) == 0:

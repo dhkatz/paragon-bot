@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import asyncio
 import datetime
 import logging
@@ -21,7 +23,7 @@ __version__ = '0.42.0'
 
 BOT_DESCRIPTION = '''A Discord bot built for Paragon servers.'''
 BOT_STATUS = discord.Game(name='Paragon (Say ' + config.__prefix__ + 'help)')
-BOT_DB = SqliteDatabase('C:/Users/mcilu/PycharmProjects/Paragon-Discord-Bot/Database/paragon_bot.db')
+BOT_DB = SqliteDatabase('data/paragon_bot.db')
 
 
 class Bot(commands.Bot):
