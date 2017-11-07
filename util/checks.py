@@ -1,7 +1,6 @@
 from discord.ext import commands
 
-import data.config.load as config
-from cogs.database import *
+from config import config
 
 
 def check_permissions(ctx, perms, *, check=all):

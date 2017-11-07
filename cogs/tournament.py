@@ -4,7 +4,7 @@ from time import time
 from discord.ext import commands
 
 from cogs.database import *
-from cogs.util import checks
+from util import checks
 
 
 class Tournament:

@@ -9,7 +9,7 @@ import requests
 from discord.ext import commands
 
 from cogs.database import *
-from .util.paginator import Pages, EmbedPages
+import util.paginator
 
 
 class Agora:
@@ -17,7 +17,7 @@ class Agora:
 
     def __init__(self, bot):
         self.bot = bot
-        self.hero_file = '{}/heroes.ini'.format('data/heroes.ini')
+        self.hero_file = '{}/heroes.ini'.format('config')
         self.icon_url = 'https://e-stats.io/src/images/games/paragon/logo-white-icon.png'
         self.heroes = configparser.ConfigParser()
         self.heroes.read(self.hero_file)
@@ -152,7 +152,7 @@ class Agora:
             await self.bot.embed_notify(ctx, 1, 'Error',
                                         'Hero does not exist, if the hero is new be patient and try again in a few days!')
             return
-        p = EmbedPages(ctx, icon_url=self.icon_url, entries=tuple(
+        p = util.paginator.EmbedPages(ctx, icon_url=self.icon_url, entries=tuple(
             self.get_agora_hero_deck(hero_name=results.hero_name, image=results.icon, num=i) for i in range(0, 3)))
         await p.paginate()
 
@@ -173,7 +173,7 @@ class Agora:
             await self.bot.embed_notify(ctx, 1, 'Error',
                                         'Hero does not exist, if the hero is new be patient and try again in a few days!')
             return
-        p = EmbedPages(ctx, icon_url=self.icon_url, entries=tuple(
+        p = util.paginator.EmbedPages(ctx, icon_url=self.icon_url, entries=tuple(
             self.get_agora_hero_guide(hero_id=results.agora_data_name, image=results.icon, num=i) for i in range(0, 3)))
         await p.paginate()
 
@@ -199,7 +199,7 @@ class Agora:
         if len(embeds) < 2:
             await ctx.send(embed=embeds.pop())
             return
-        p = EmbedPages(ctx, icon_url=self.icon_url, entries=embeds)
+        p = util.paginator.EmbedPages(ctx, icon_url=self.icon_url, entries=embeds)
         await p.paginate()
 
     @commands.command()
@@ -207,7 +207,7 @@ class Agora:
         """Lists all cards in Paragon."""
         try:
             rows = Card.select()
-            p = Pages(ctx, entries=tuple(card.card_name for card in rows))
+            p = util.paginator.Pages(ctx, entries=tuple(card.card_name for card in rows))
             p.embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
             await p.paginate()
         except Exception as e:
@@ -235,7 +235,7 @@ class Agora:
         if len(embeds) < 2:
             await ctx.send(embed=embeds.pop())
             return
-        p = EmbedPages(ctx, icon_url=self.icon_url, entries=embeds)
+        p = util.paginator.EmbedPages(ctx, icon_url=self.icon_url, entries=embeds)
         await p.paginate()
 
     @commands.command()

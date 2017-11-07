@@ -5,10 +5,10 @@ import sys
 import aiohttp
 import discord
 from discord.ext import commands
-from .database import Player
 from peewee import DoesNotExist
 
-from .util.paginator import Pages
+from util.paginator import Pages
+from .database import Player
 
 
 class Admin:

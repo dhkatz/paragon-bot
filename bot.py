@@ -9,14 +9,11 @@ import traceback
 from collections import Counter
 from logging.handlers import RotatingFileHandler
 
-import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from cleverwrap import CleverWrap
 from discord.ext import commands
-from peewee import *
 from pytz import timezone
 
-import data.config.load as config
+from config import config
 from cogs.database import *
 
 __version__ = '0.42.0'
@@ -37,7 +34,6 @@ class Bot(commands.Bot):
         self.db = BOT_DB
         self.dev = True
         self.icon_url = 'https://e-stats.io/src/images/games/paragon/logo-white-icon.png'
-        self.clever = CleverWrap(config.__cleverbot__)
         super().__init__(*args, command_prefix=config.__prefix__, **kwargs)
 
     async def embed_notify(self, ctx: commands.Context, error: int, title: str, message: str, raw: bool = False):
@@ -118,8 +114,6 @@ def initialize(bot_class=Bot):
             if ctx.valid:
                 await bot.embed_notify(ctx, 1, 'Error', 'You are blacklisted from commands!')
             return
-        if bot.user.mentioned_in(message) and not message.mention_everyone:
-            await message.channel.send(bot.clever.say(message.clean_content))
         await bot.process_commands(message)
 
     return bot
@@ -135,7 +129,8 @@ def set_logger():
     ch.setLevel(logging.INFO)
     logger.addHandler(ch)
 
-    fh = RotatingFileHandler(filename='discordbot.log', maxBytes=1024 * 5, backupCount=2, encoding='utf-8', mode='w')
+    fh = RotatingFileHandler(filename='data/discordbot.log', maxBytes=1024 * 5, backupCount=2, encoding='utf-8',
+                             mode='w')
     fh.setFormatter(log_format)
     logger.addHandler(fh)
 

@@ -1,9 +1,12 @@
-import praw, prawcore, discord, asyncio
+import time
+
+import discord
+import praw
+import prawcore
 from discord.ext import commands
 
-import data.config.load as config
-from .util.paginator import EmbedPages
-import time
+from config import config
+from util.paginator import EmbedPages
 
 
 class Reddit:
@@ -15,7 +18,7 @@ class Reddit:
                                     client_secret=config.__reddit__['client_secret'],
                                     username=config.__reddit__['username'], password=config.__reddit__['password'])
         self.subreddit = self.instance.subreddit('paragon')
-        self.bot.logger.info('Logged into Reddit as ' + str(self.instance.user.me()))
+        self.bot.logger.info('[Reddit] Logged into Reddit as ' + str(self.instance.user.me()))
 
     @commands.group(name='reddit')
     async def reddit(self, ctx):

@@ -5,8 +5,6 @@ import discord
 from discord.ext import commands
 from memory_profiler import memory_usage
 
-from cogs.util import checks
-
 
 class Info:
     """Information about the bot."""
